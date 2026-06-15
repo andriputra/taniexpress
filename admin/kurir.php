@@ -38,27 +38,8 @@ $activeMenu = 'kurir';
 include __DIR__ . '/../includes/admin-layout-start.php';
 ?>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="bg-white rounded-xl p-6 shadow-sm border border-outline-variant/30 h-fit">
-        <h3 class="font-semibold mb-4"><?= $edit ? 'Edit Kurir' : 'Tambah Kurir' ?></h3>
-        <form method="POST" class="space-y-3">
-            <input type="hidden" name="action" value="<?= $edit ? 'update' : 'create' ?>"/>
-            <?php if ($edit): ?><input type="hidden" name="id" value="<?= $edit['id'] ?>"/><?php endif; ?>
-            <div><label class="text-xs font-medium">Nama Kurir</label><input name="nama" required value="<?= e($edit['nama'] ?? '') ?>" class="input-field text-sm mt-1"/></div>
-            <div><label class="text-xs font-medium">No. Telepon</label><input name="telepon" required value="<?= e($edit['telepon'] ?? '') ?>" class="input-field text-sm mt-1"/></div>
-            <div>
-                <label class="text-xs font-medium">Status</label>
-                <select name="status" class="input-field text-sm mt-1">
-                    <option value="tersedia" <?= ($edit['status'] ?? '') === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
-                    <option value="sibuk" <?= ($edit['status'] ?? '') === 'sibuk' ? 'selected' : '' ?>>Sibuk</option>
-                </select>
-            </div>
-            <button type="submit" class="w-full py-2 bg-primary text-white rounded-lg text-sm font-semibold"><?= $edit ? 'Update' : 'Simpan' ?></button>
-            <?php if ($edit): ?><a href="kurir.php" class="block text-center text-sm text-text-muted mt-2">Batal</a><?php endif; ?>
-        </form>
-    </div>
-
-    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+    <div class="lg:col-span-2 order-1 lg:order-2 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         <?php foreach ($kurirs as $k): ?>
             <div class="bg-white rounded-xl p-5 shadow-sm border border-outline-variant/30">
                 <div class="flex justify-between items-start">
@@ -85,6 +66,25 @@ include __DIR__ . '/../includes/admin-layout-start.php';
                 </div>
             </div>
         <?php endforeach; ?>
+    </div>
+
+    <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-outline-variant/30 h-fit order-2 lg:order-1 lg:sticky lg:top-24">
+        <h3 class="font-semibold mb-4"><?= $edit ? 'Edit Kurir' : 'Tambah Kurir' ?></h3>
+        <form method="POST" class="space-y-3">
+            <input type="hidden" name="action" value="<?= $edit ? 'update' : 'create' ?>"/>
+            <?php if ($edit): ?><input type="hidden" name="id" value="<?= $edit['id'] ?>"/><?php endif; ?>
+            <div><label class="text-xs font-medium">Nama Kurir</label><input name="nama" required value="<?= e($edit['nama'] ?? '') ?>" class="input-field text-sm mt-1"/></div>
+            <div><label class="text-xs font-medium">No. Telepon</label><input name="telepon" required value="<?= e($edit['telepon'] ?? '') ?>" class="input-field text-sm mt-1"/></div>
+            <div>
+                <label class="text-xs font-medium">Status</label>
+                <select name="status" class="input-field text-sm mt-1">
+                    <option value="tersedia" <?= ($edit['status'] ?? '') === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
+                    <option value="sibuk" <?= ($edit['status'] ?? '') === 'sibuk' ? 'selected' : '' ?>>Sibuk</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full py-3 bg-primary text-white rounded-full text-sm font-semibold"><?= $edit ? 'Update' : 'Simpan' ?></button>
+            <?php if ($edit): ?><a href="kurir.php" class="block text-center text-sm text-text-muted mt-2">Batal</a><?php endif; ?>
+        </form>
     </div>
 </div>
 

@@ -32,6 +32,17 @@ function url(string $path = ''): string
     return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
 }
 
+function mediaSrc(?string $path, bool $fromAdmin = false): ?string
+{
+    if (!$path) {
+        return null;
+    }
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        return $path;
+    }
+    return ($fromAdmin ? '../' : '') . ltrim($path, '/');
+}
+
 function e(?string $value): string
 {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
@@ -165,7 +176,7 @@ function getCategories(): array
 function getProducts(?string $search = null, ?string $kategori = null, ?int $petaniId = null): array
 {
     $sql = "
-        SELECT pp.id, pp.stok, pp.harga, p.nama, p.kategori, p.satuan, p.gambar,
+        SELECT pp.id, pp.stok, pp.harga, p.id AS product_id, p.nama, p.kategori, p.satuan, p.gambar,
                pt.nama AS petani_nama, pt.id AS petani_id
         FROM produk_petani pp
         JOIN products p ON p.id = pp.product_id
@@ -192,6 +203,68 @@ function getProducts(?string $search = null, ?string $kategori = null, ?int $pet
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+function getPopularProducts(int $limit = 8): array
+{
+    $limit = max(1, min(8, $limit));
+
+    $salesStmt = db()->prepare("
+        SELECT pp.product_id, SUM(pd.qty) AS total_terjual
+        FROM pesanan_detil pd
+        INNER JOIN pesanan ps ON ps.id = pd.pesanan_id AND ps.status != 'dibatalkan'
+        INNER JOIN produk_petani pp ON pp.id = pd.produk_petani_id
+        GROUP BY pp.product_id
+        ORDER BY total_terjual DESC
+        LIMIT ?
+    ");
+    $salesStmt->bindValue(1, $limit, PDO::PARAM_INT);
+    $salesStmt->execute();
+    $topSales = $salesStmt->fetchAll();
+
+    $result = [];
+
+    if ($topSales) {
+        $productIds = array_column($topSales, 'product_id');
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $orderList = implode(',', array_map('intval', $productIds));
+
+        $listingStmt = db()->prepare("
+            SELECT pp.id, pp.stok, pp.harga, p.id AS product_id, p.nama, p.kategori, p.satuan, p.gambar,
+                   pt.nama AS petani_nama, pt.id AS petani_id
+            FROM produk_petani pp
+            JOIN products p ON p.id = pp.product_id
+            JOIN petani pt ON pt.id = pp.petani_id
+            WHERE pp.product_id IN ($placeholders) AND pp.stok > 0
+            ORDER BY FIELD(p.id, $orderList), pp.harga ASC
+        ");
+        $listingStmt->execute($productIds);
+
+        $seen = [];
+        foreach ($listingStmt->fetchAll() as $row) {
+            if (isset($seen[$row['product_id']])) {
+                continue;
+            }
+            $seen[$row['product_id']] = true;
+            $result[] = $row;
+        }
+    }
+
+    if (count($result) < $limit) {
+        $shownIds = array_column($result, 'product_id');
+        foreach (getProducts() as $row) {
+            if (in_array($row['product_id'], $shownIds, true)) {
+                continue;
+            }
+            $result[] = $row;
+            $shownIds[] = $row['product_id'];
+            if (count($result) >= $limit) {
+                break;
+            }
+        }
+    }
+
+    return array_slice($result, 0, $limit);
 }
 
 function getProductDetail(int $produkPetaniId): ?array
@@ -261,6 +334,15 @@ function restoreOrderStock(int $pesananId): void
     $details->execute([$pesananId]);
     foreach ($details->fetchAll() as $d) {
         db()->prepare('UPDATE produk_petani SET stok = stok + ? WHERE id=?')->execute([$d['qty'], $d['produk_petani_id']]);
+    }
+    $products = db()->prepare('
+        SELECT DISTINCT pp.product_id FROM pesanan_detil pd
+        JOIN produk_petani pp ON pp.id = pd.produk_petani_id
+        WHERE pd.pesanan_id = ?
+    ');
+    $products->execute([$pesananId]);
+    foreach ($products->fetchAll(PDO::FETCH_COLUMN) as $productId) {
+        refreshProductStockTotal((int) $productId);
     }
 }
 
@@ -373,147 +455,161 @@ function orderAdminActionLabel(string $currentStatus, string $nextStatus): strin
     };
 }
 
-function orderStatusFlow(): array
+function getAdminProducts(?string $search = null, ?string $kategori = null, int $page = 1, int $perPage = 12): array
 {
+    $where = [];
+    $params = [];
+
+    if ($search) {
+        $where[] = '(p.nama LIKE ? OR p.sku LIKE ? OR p.kategori LIKE ? OR p.deskripsi LIKE ?)';
+        $term = '%' . $search . '%';
+        array_push($params, $term, $term, $term, $term);
+    }
+    if ($kategori) {
+        $where[] = 'p.kategori = ?';
+        $params[] = $kategori;
+    }
+
+    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    $countStmt = db()->prepare("SELECT COUNT(*) FROM products p $whereSql");
+    $countStmt->execute($params);
+    $total = (int) $countStmt->fetchColumn();
+
+    $page = max(1, $page);
+    $perPage = max(1, min(50, $perPage));
+    $totalPages = max(1, (int) ceil($total / $perPage));
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+    $offset = ($page - 1) * $perPage;
+
+    $stmt = db()->prepare("
+        SELECT p.*, COUNT(pp.id) AS jumlah_listing,
+               COALESCE(SUM(pp.stok), p.stok, 0) AS stok_toko
+        FROM products p
+        LEFT JOIN produk_petani pp ON pp.product_id = p.id
+        $whereSql
+        GROUP BY p.id
+        ORDER BY p.nama ASC
+        LIMIT $perPage OFFSET $offset
+    ");
+    $stmt->execute($params);
+
     return [
-        'menunggu_pembayaran' => 'menunggu_verifikasi',
-        'menunggu_verifikasi' => 'diproses',
-        'diproses' => 'dikemas',
-        'dikemas' => 'dikirim',
-        'dikirim' => 'sampai',
-        'sampai' => 'selesai',
+        'items' => $stmt->fetchAll(),
+        'total' => $total,
+        'page' => $page,
+        'perPage' => $perPage,
+        'totalPages' => $totalPages,
     ];
 }
 
-function orderNextStatus(string $status): ?string
+function getAdminProdukPetani(?string $search = null, int $page = 1, int $perPage = 15): array
 {
-    return orderStatusFlow()[$status] ?? null;
+    $where = [];
+    $params = [];
+
+    if ($search) {
+        $where[] = '(p.nama LIKE ? OR pt.nama LIKE ? OR p.sku LIKE ? OR p.kategori LIKE ?)';
+        $term = '%' . $search . '%';
+        array_push($params, $term, $term, $term, $term);
+    }
+
+    $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    $countStmt = db()->prepare("
+        SELECT COUNT(*)
+        FROM produk_petani pp
+        JOIN products p ON p.id = pp.product_id
+        JOIN petani pt ON pt.id = pp.petani_id
+        $whereSql
+    ");
+    $countStmt->execute($params);
+    $total = (int) $countStmt->fetchColumn();
+
+    $page = max(1, $page);
+    $perPage = max(1, min(50, $perPage));
+    $totalPages = max(1, (int) ceil($total / $perPage));
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+    $offset = ($page - 1) * $perPage;
+
+    $stmt = db()->prepare("
+        SELECT pp.*, p.nama AS produk_nama, p.satuan, p.sku, p.kategori, pt.nama AS petani_nama
+        FROM produk_petani pp
+        JOIN products p ON p.id = pp.product_id
+        JOIN petani pt ON pt.id = pp.petani_id
+        $whereSql
+        ORDER BY p.nama ASC, pt.nama ASC
+        LIMIT $perPage OFFSET $offset
+    ");
+    $stmt->execute($params);
+
+    return [
+        'items' => $stmt->fetchAll(),
+        'total' => $total,
+        'page' => $page,
+        'perPage' => $perPage,
+        'totalPages' => $totalPages,
+    ];
 }
 
-function orderIsTerminal(string $status): bool
+function adminQueryString(array $overrides = []): string
 {
-    return in_array($status, ['selesai', 'dibatalkan'], true);
-}
-
-function orderCanCancel(string $status): bool
-{
-    return !orderIsTerminal($status) && $status !== 'sampai';
-}
-
-function restoreOrderStock(int $pesananId): void
-{
-    $details = db()->prepare('SELECT produk_petani_id, qty FROM pesanan_detil WHERE pesanan_id=?');
-    $details->execute([$pesananId]);
-    foreach ($details->fetchAll() as $d) {
-        db()->prepare('UPDATE produk_petani SET stok = stok + ? WHERE id=?')->execute([$d['qty'], $d['produk_petani_id']]);
-    }
-}
-
-function releaseKurir(?int $kurirId): void
-{
-    if ($kurirId) {
-        db()->prepare("UPDATE kurir SET status='tersedia' WHERE id=?")->execute([$kurirId]);
-    }
-}
-
-function assignKurir(int $kurirId): bool
-{
-    $kurir = db()->prepare("SELECT id, status FROM kurir WHERE id=?");
-    $kurir->execute([$kurirId]);
-    $kurir = $kurir->fetch();
-    if (!$kurir || $kurir['status'] !== 'tersedia') {
-        return false;
-    }
-    db()->prepare("UPDATE kurir SET status='sibuk' WHERE id=?")->execute([$kurirId]);
-    return true;
-}
-
-/**
- * @return array{ok: bool, message: string}
- */
-function updateOrderStatus(int $pesananId, string $newStatus, array $options = []): array
-{
-    $stmt = db()->prepare('SELECT * FROM pesanan WHERE id=?');
-    $stmt->execute([$pesananId]);
-    $order = $stmt->fetch();
-    if (!$order) {
-        return ['ok' => false, 'message' => 'Pesanan tidak ditemukan.'];
-    }
-
-    $current = $order['status'];
-    if ($current === $newStatus) {
-        return ['ok' => false, 'message' => 'Status pesanan sudah ' . statusLabel($current) . '.'];
-    }
-
-    if (orderIsTerminal($current)) {
-        return ['ok' => false, 'message' => 'Pesanan sudah ' . statusLabel($current) . ' dan tidak dapat diubah.'];
-    }
-
-    $allowed = false;
-
-    if ($newStatus === 'dibatalkan') {
-        $allowed = orderCanCancel($current);
-    } elseif ($newStatus === 'menunggu_pembayaran' && $current === 'menunggu_verifikasi') {
-        $allowed = true;
-    } elseif ($newStatus === orderNextStatus($current)) {
-        $allowed = true;
-    } elseif ($newStatus === 'selesai' && $current === 'sampai') {
-        $allowed = true;
-    }
-
-    if (!$allowed) {
-        $next = orderNextStatus($current);
-        $hint = $next ? 'Langkah berikutnya: ' . statusLabel($next) . '.' : '';
-        return ['ok' => false, 'message' => 'Transisi status tidak valid. ' . $hint];
-    }
-
-    if ($newStatus === 'diproses' && $current === 'menunggu_verifikasi' && empty($order['bukti_bayar'])) {
-        return ['ok' => false, 'message' => 'Bukti pembayaran belum diunggah customer.'];
-    }
-
-    if ($newStatus === 'dikirim') {
-        $kurirId = (int) ($options['kurir_id'] ?? $order['kurir_id'] ?? 0);
-        if (!$kurirId) {
-            return ['ok' => false, 'message' => 'Pilih kurir sebelum mengirim pesanan.'];
+    $params = array_merge($_GET, $overrides);
+    foreach ($params as $key => $value) {
+        if ($value === '' || $value === null) {
+            unset($params[$key]);
         }
-        if (!assignKurir($kurirId)) {
-            return ['ok' => false, 'message' => 'Kurir tidak tersedia. Pilih kurir lain.'];
-        }
-        db()->prepare('UPDATE pesanan SET status=?, kurir_id=? WHERE id=?')->execute([$newStatus, $kurirId, $pesananId]);
-        return ['ok' => true, 'message' => 'Pesanan dikirim dengan kurir ' . statusLabel($newStatus) . '.'];
     }
-
-    if ($newStatus === 'menunggu_pembayaran' && $current === 'menunggu_verifikasi') {
-        db()->prepare('UPDATE pesanan SET status=?, bukti_bayar=NULL WHERE id=?')->execute([$newStatus, $pesananId]);
-        return ['ok' => true, 'message' => 'Bukti pembayaran ditolak. Customer diminta upload ulang.'];
-    }
-
-    if ($newStatus === 'dibatalkan') {
-        restoreOrderStock($pesananId);
-        releaseKurir($order['kurir_id'] ? (int) $order['kurir_id'] : null);
-        db()->prepare('UPDATE pesanan SET status=? WHERE id=?')->execute([$newStatus, $pesananId]);
-        return ['ok' => true, 'message' => 'Pesanan dibatalkan dan stok dikembalikan.'];
-    }
-
-    if ($newStatus === 'selesai') {
-        releaseKurir($order['kurir_id'] ? (int) $order['kurir_id'] : null);
-        db()->prepare('UPDATE pesanan SET status=? WHERE id=?')->execute([$newStatus, $pesananId]);
-        return ['ok' => true, 'message' => 'Pesanan selesai.'];
-    }
-
-    db()->prepare('UPDATE pesanan SET status=? WHERE id=?')->execute([$newStatus, $pesananId]);
-
-    return ['ok' => true, 'message' => 'Status diperbarui menjadi ' . statusLabel($newStatus) . '.'];
+    return $params ? '?' . http_build_query($params) : '';
 }
 
-function orderAdminActionLabel(string $status): string
+/** Sinkronkan stok master produk ke semua listing petani */
+function syncProdukPetaniStock(int $productId, int $stok): void
 {
-    return match ($status) {
-        'diproses' => 'Verifikasi & Proses Pesanan',
-        'dikemas' => 'Mulai Kemas Pesanan',
-        'dikirim' => 'Kirim Pesanan',
-        'sampai' => 'Tandai Sudah Sampai',
-        'selesai' => 'Tandai Selesai',
-        default => 'Lanjut ke ' . statusLabel($status),
-    };
+    db()->prepare('UPDATE produk_petani SET stok = ? WHERE product_id = ?')->execute([$stok, $productId]);
+}
+
+/** Hitung ulang stok master dari total listing petani */
+function refreshProductStockTotal(int $productId): void
+{
+    db()->prepare('
+        UPDATE products SET stok = COALESCE((
+            SELECT SUM(stok) FROM produk_petani WHERE product_id = ?
+        ), 0) WHERE id = ?
+    ')->execute([$productId, $productId]);
+}
+
+function produkPetaniExists(int $productId, int $petaniId, ?int $excludeId = null): bool
+{
+    $sql = 'SELECT id FROM produk_petani WHERE product_id = ? AND petani_id = ?';
+    $params = [$productId, $petaniId];
+    if ($excludeId) {
+        $sql .= ' AND id != ?';
+        $params[] = $excludeId;
+    }
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return (bool) $stmt->fetch();
+}
+
+function pdoErrorMessage(PDOException $e): string
+{
+    $msg = $e->getMessage();
+    if ($e->getCode() === '23000' || str_contains($msg, '1062') || str_contains($msg, 'Duplicate entry')) {
+        if (str_contains($msg, 'unique_produk_petani')) {
+            return 'Produk ini sudah dijual oleh petani yang dipilih. Edit listing yang ada atau pilih kombinasi lain.';
+        }
+        if (str_contains($msg, 'sku')) {
+            return 'SKU sudah digunakan produk lain.';
+        }
+        return 'Data duplikat. Periksa kembali input Anda.';
+    }
+    if (str_contains($msg, '1451') || str_contains($msg, 'foreign key constraint')) {
+        return 'Data tidak dapat dihapus karena masih terhubung dengan data lain.';
+    }
+    return 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.';
 }

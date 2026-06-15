@@ -13,6 +13,7 @@ $menus = [
     'kurir' => ['icon' => 'local_shipping', 'label' => 'Kurir', 'url' => 'kurir.php'],
     'pesanan' => ['icon' => 'shopping_cart', 'label' => 'Pesanan', 'url' => 'pesanan.php'],
     'laporan' => ['icon' => 'description', 'label' => 'Laporan', 'url' => 'laporan.php'],
+    'account' => ['icon' => 'person', 'label' => 'Akun', 'url' => 'account.php'],
 ];
 ?>
 <!DOCTYPE html>
@@ -47,6 +48,8 @@ $menus = [
         body { font-family: 'Inter', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .tonal-shadow { box-shadow: 0 4px 20px -2px rgba(45, 106, 79, 0.08); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .input-field,
         select.input-field,
         textarea.input-field,
@@ -65,25 +68,46 @@ $menus = [
             background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23707973' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
             background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.75rem;
         }
-        @media print { aside, .no-print { display: none !important; } main { margin-left: 0 !important; } }
+        .admin-chip-scroll {
+            display:flex;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;
+            padding-bottom:.25rem;margin-left:-1rem;margin-right:-1rem;padding-left:1rem;padding-right:1rem;
+        }
+        @media (min-width: 768px) {
+            .admin-chip-scroll { margin-left:0;margin-right:0;padding-left:0;padding-right:0;flex-wrap:wrap;overflow:visible; }
+        }
+        #admin-sidebar { transform: translateX(-100%); }
+        @media (min-width: 768px) {
+            #admin-sidebar { transform: translateX(0) !important; }
+        }
+        @media print { aside, .no-print, #admin-drawer-overlay { display: none !important; } main { margin-left: 0 !important; } }
+        <?= passwordToggleCss() ?>
     </style>
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex">
-<aside class="hidden md:flex flex-col w-64 h-screen border-r border-outline-variant bg-surface-container-low fixed left-0 top-0 z-50">
-    <div class="px-6 py-6">
-        <h1 class="text-xl font-bold text-primary"><?= e(APP_NAME) ?></h1>
-        <p class="text-xs text-text-muted mt-1">Panel Admin</p>
-    </div>
-    <div class="px-6 mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold">
-            <?= strtoupper(substr($user['nama'], 0, 1)) ?>
+<div id="admin-drawer-overlay" class="fixed inset-0 bg-black/45 z-[60] hidden md:hidden no-print" aria-hidden="true"></div>
+
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-[70] flex flex-col w-[min(88vw,17rem)] md:w-64 h-screen border-r border-outline-variant bg-surface-container-low transition-transform duration-300 ease-out no-print">
+    <div class="px-5 py-5 md:px-6 md:py-6 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <h1 class="text-lg md:text-xl font-bold text-primary truncate"><?= e(APP_NAME) ?></h1>
+            <p class="text-xs text-text-muted mt-0.5">Panel Admin</p>
         </div>
-        <div>
-            <p class="text-sm font-semibold"><?= e($user['nama']) ?></p>
-            <p class="text-xs text-text-muted">Administrator</p>
-        </div>
+        <button type="button" id="admin-menu-close" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-outline hover:bg-leaf-green-light hover:text-primary shrink-0" aria-label="Tutup menu">
+            <span class="material-symbols-outlined">close</span>
+        </button>
     </div>
-    <nav class="flex-1 px-3 space-y-1">
+    <div class="px-5 md:px-6 mb-4 md:mb-6">
+        <a href="account.php" class="flex items-center gap-3 group min-w-0">
+            <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold shrink-0 group-hover:ring-2 group-hover:ring-primary/30 transition-all">
+                <?= strtoupper(substr($user['nama'], 0, 1)) ?>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-semibold truncate group-hover:text-primary transition-colors"><?= e($user['nama']) ?></p>
+                <p class="text-xs text-text-muted">Administrator</p>
+            </div>
+        </a>
+    </div>
+    <nav class="flex-1 px-2 md:px-3 space-y-0.5 overflow-y-auto">
         <?php foreach ($menus as $key => $menu): ?>
             <a href="<?= $menu['url'] ?>"
                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
@@ -103,17 +127,13 @@ $menus = [
     </div>
 </aside>
 
-<main class="flex-1 md:ml-64 min-h-screen">
-    <header class="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-outline-variant px-6 py-4 flex justify-between items-center no-print">
-        <h2 class="text-xl font-bold text-text-main"><?= e($pageTitle) ?></h2>
-        <div class="md:hidden">
-            <select onchange="location.href=this.value" class="input-field text-sm !py-2">
-                <?php foreach ($menus as $key => $menu): ?>
-                    <option value="<?= $menu['url'] ?>" <?= $activeMenu === $key ? 'selected' : '' ?>><?= $menu['label'] ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+<main class="flex-1 md:ml-64 min-h-screen min-w-0 w-full">
+    <header class="sticky top-0 z-40 bg-surface/95 backdrop-blur border-b border-outline-variant px-4 md:px-6 py-3 md:py-4 flex items-center gap-3 no-print">
+        <button type="button" id="admin-menu-btn" class="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-primary hover:bg-leaf-green-light shrink-0" aria-label="Buka menu">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <h2 class="text-base sm:text-lg md:text-xl font-bold text-text-main truncate flex-1 min-w-0"><?= e($pageTitle) ?></h2>
     </header>
 
-    <div class="p-6">
+    <div class="p-4 md:p-6 pb-8">
         <?php renderFlashMessages(); ?>

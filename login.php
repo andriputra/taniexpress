@@ -34,7 +34,7 @@ include __DIR__ . '/includes/app-header.php';
         <div class="bg-white rounded-2xl p-8 tonal-shadow">
             <form method="POST" class="space-y-4">
                 <div><label class="block text-sm font-medium text-text-muted mb-1.5">Email</label><input type="email" name="email" required value="<?= e($_POST['email'] ?? '') ?>" class="input-field"/></div>
-                <div><label class="block text-sm font-medium text-text-muted mb-1.5">Password</label><input type="password" name="password" required class="input-field"/></div>
+                <?php renderPasswordField('Password', 'password', ['required' => true, 'autocomplete' => 'current-password']); ?>
                 <button type="submit" class="btn-primary w-full">Masuk</button>
             </form>
             <p class="text-center text-sm text-text-muted mt-6">Belum punya akun? <a href="register.php" class="text-primary font-semibold hover:underline">Daftar</a></p>

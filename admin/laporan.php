@@ -81,35 +81,54 @@ $activeMenu = 'laporan';
 include __DIR__ . '/../includes/admin-layout-start.php';
 ?>
 
-<div class="bg-white rounded-xl p-6 shadow-sm border border-outline-variant/30 mb-6">
-    <form method="GET" class="flex flex-wrap gap-4 items-end">
-        <div>
+<div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-outline-variant/30 mb-4 md:mb-6">
+    <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-end">
+        <div class="flex-1 min-w-[140px]">
             <label class="text-xs font-medium block mb-1">Dari Tanggal</label>
             <input type="date" name="dari" value="<?= e($dari) ?>" class="input-field text-sm"/>
         </div>
-        <div>
+        <div class="flex-1 min-w-[140px]">
             <label class="text-xs font-medium block mb-1">Sampai Tanggal</label>
             <input type="date" name="sampai" value="<?= e($sampai) ?>" class="input-field text-sm"/>
         </div>
-        <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-semibold">Filter</button>
-        <a href="?dari=<?= e($dari) ?>&sampai=<?= e($sampai) ?>&export=1" target="_blank" class="px-6 py-2 bg-tertiary-container text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary text-white rounded-full text-sm font-semibold">Filter</button>
+        <a href="?dari=<?= e($dari) ?>&sampai=<?= e($sampai) ?>&export=1" target="_blank" class="w-full sm:w-auto px-6 py-3 bg-tertiary-container text-white rounded-full text-sm font-semibold flex items-center justify-center gap-2">
             <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span> Export PDF
         </a>
     </form>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    <div class="bg-white rounded-xl p-5 shadow-sm border">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border">
         <p class="text-sm text-text-muted">Total Pesanan</p>
-        <p class="text-3xl font-bold text-primary"><?= $totalPesanan ?></p>
+        <p class="text-2xl md:text-3xl font-bold text-primary"><?= $totalPesanan ?></p>
     </div>
-    <div class="bg-white rounded-xl p-5 shadow-sm border">
+    <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border">
         <p class="text-sm text-text-muted">Total Pendapatan</p>
-        <p class="text-3xl font-bold text-success-green"><?= formatRupiah($totalPendapatan) ?></p>
+        <p class="text-2xl md:text-3xl font-bold text-success-green"><?= formatRupiah($totalPendapatan) ?></p>
     </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+<!-- Mobile -->
+<div class="md:hidden space-y-3">
+    <?php if (empty($orders)): ?>
+        <div class="bg-white rounded-xl p-8 text-center text-sm text-text-muted border">Tidak ada data pada periode ini.</div>
+    <?php endif; ?>
+    <?php foreach ($orders as $o): ?>
+        <div class="bg-white rounded-xl p-4 border border-outline-variant/30 shadow-sm">
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <p class="font-mono text-xs font-semibold"><?= e($o['kode_pesanan']) ?></p>
+                <span class="text-[10px] px-2 py-1 rounded-full shrink-0 <?= statusColor($o['status']) ?>"><?= statusLabel($o['status']) ?></span>
+            </div>
+            <p class="text-sm"><?= e($o['customer_nama']) ?></p>
+            <p class="text-xs text-text-muted mt-1"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?> · <?= e($o['kurir_nama'] ?? 'Tanpa kurir') ?></p>
+            <p class="text-sm font-bold text-primary mt-2"><?= formatRupiah($o['total']) ?></p>
+        </div>
+    <?php endforeach; ?>
+</div>
+
+<!-- Desktop -->
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-surface-container-low">
             <tr>

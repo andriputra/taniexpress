@@ -23,6 +23,19 @@ try {
         $pdo->exec('DROP DATABASE IF EXISTS ' . DB_NAME);
     }
 
+    $pdo->exec('CREATE DATABASE IF NOT EXISTS ' . DB_NAME);
+    $pdo->exec('USE ' . DB_NAME);
+
+    // Migrasi: kolom stok harus ada sebelum INSERT seed di schema.sql
+    $hasProducts = (bool) $pdo->query("SHOW TABLES LIKE 'products'")->fetch();
+    if ($hasProducts) {
+        $hasStok = (bool) $pdo->query("SHOW COLUMNS FROM products LIKE 'stok'")->fetch();
+        if (!$hasStok) {
+            $pdo->exec('ALTER TABLE products ADD COLUMN stok INT NOT NULL DEFAULT 0 AFTER gambar');
+            echo "Migrasi: kolom products.stok ditambahkan.\n";
+        }
+    }
+
     $sql = file_get_contents(__DIR__ . '/database/schema.sql');
     $statements = array_filter(array_map('trim', explode(';', $sql)));
 
@@ -45,6 +58,18 @@ try {
     }
 
     $pdo->exec('USE ' . DB_NAME);
+
+    // Sinkronkan stok master dari listing petani
+    $hasStok = (bool) $pdo->query("SHOW COLUMNS FROM products LIKE 'stok'")->fetch();
+    if ($hasStok) {
+        $pdo->exec('
+            UPDATE products p
+            SET p.stok = COALESCE((
+                SELECT SUM(pp.stok) FROM produk_petani pp WHERE pp.product_id = p.id
+            ), 0)
+        ');
+    }
+
     $hash = password_hash('admin123', PASSWORD_DEFAULT);
     $pdo->prepare('UPDATE users SET password = ?')->execute([$hash]);
 

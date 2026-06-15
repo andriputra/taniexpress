@@ -47,6 +47,57 @@ function pushToast(string $type, string $message): void
     $GLOBALS['_toast_queue'][] = ['type' => $type, 'message' => $message];
 }
 
+function passwordToggleCss(): string
+{
+    return <<<'CSS'
+        .password-toggle-wrap { position: relative; }
+        .password-toggle-input { padding-right: 3rem !important; }
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.625rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2.25rem;
+            height: 2.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #707973;
+            border-radius: 9999px;
+            transition: color .2s, background .2s;
+        }
+        .password-toggle-btn:hover { color: #0f5238; background: #D8F3DC; }
+        .password-toggle-btn .material-symbols-outlined { font-size: 20px; line-height: 1; }
+CSS;
+}
+
+function renderPasswordField(string $label, string $name, array $attrs = []): void
+{
+    $id = $attrs['id'] ?? $name;
+    $required = !empty($attrs['required']) ? ' required' : '';
+    $minlength = isset($attrs['minlength']) ? ' minlength="' . (int) $attrs['minlength'] . '"' : '';
+    $autocomplete = isset($attrs['autocomplete']) ? ' autocomplete="' . e($attrs['autocomplete']) . '"' : '';
+    $value = isset($attrs['value']) ? ' value="' . e($attrs['value']) . '"' : '';
+    $labelClass = $attrs['labelClass'] ?? 'block text-sm font-medium text-text-muted mb-1.5';
+    ?>
+    <div>
+        <label class="<?= e($labelClass) ?>" for="<?= e($id) ?>"><?= e($label) ?></label>
+        <div class="password-toggle-wrap">
+            <input
+                type="password"
+                id="<?= e($id) ?>"
+                name="<?= e($name) ?>"
+                class="input-field password-toggle-input"<?= $required ?><?= $minlength ?><?= $autocomplete ?><?= $value ?>
+            />
+            <button type="button" class="password-toggle-btn" aria-label="Tampilkan password" data-password-toggle>
+                <span class="material-symbols-outlined icon-show">visibility</span>
+                <span class="material-symbols-outlined icon-hide hidden">visibility_off</span>
+            </button>
+        </div>
+    </div>
+    <?php
+}
+
 function renderUiShell(): void
 {
     static $rendered = false;
@@ -174,7 +225,27 @@ function renderUiScripts(): void
         const initial = <?= $json ?: '[]' ?>;
         initial.forEach((t) => showToast(t.type, t.message));
 
-        return { showToast, showConfirm };
+        function initPasswordToggles(root) {
+            (root || document).querySelectorAll('[data-password-toggle]').forEach((btn) => {
+                if (btn.dataset.bound === '1') return;
+                btn.dataset.bound = '1';
+                const input = btn.closest('.password-toggle-wrap')?.querySelector('input');
+                const iconShow = btn.querySelector('.icon-show');
+                const iconHide = btn.querySelector('.icon-hide');
+                if (!input) return;
+                btn.addEventListener('click', () => {
+                    const visible = input.type === 'text';
+                    input.type = visible ? 'password' : 'text';
+                    iconShow?.classList.toggle('hidden', !visible);
+                    iconHide?.classList.toggle('hidden', visible);
+                    btn.setAttribute('aria-label', visible ? 'Tampilkan password' : 'Sembunyikan password');
+                });
+            });
+        }
+
+        initPasswordToggles();
+
+        return { showToast, showConfirm, initPasswordToggles };
     })();
     </script>
     <?php

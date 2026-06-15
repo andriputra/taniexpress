@@ -62,9 +62,17 @@ include __DIR__ . '/includes/app-header.php';
         <?php if ($order['status'] === 'menunggu_pembayaran'): ?>
             <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl p-6 tonal-shadow">
                 <h2 class="font-semibold text-text-main mb-4">Upload Bukti Pembayaran</h2>
+                <p class="text-sm text-text-muted mb-4">Scan QRIS, bayar sesuai total, lalu upload screenshot bukti transfer.</p>
                 <input type="file" name="bukti" accept="image/*" required class="input-field mb-4 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white file:text-sm"/>
                 <button type="submit" class="btn-primary w-full"><span class="material-symbols-outlined">upload</span> Konfirmasi Pembayaran</button>
             </form>
+        <?php elseif ($order['status'] === 'menunggu_verifikasi'): ?>
+            <div class="text-center p-8 bg-sun-tint/40 rounded-2xl tonal-shadow border border-tertiary-container/20">
+                <span class="material-symbols-outlined text-tertiary-container text-5xl mb-3">pending</span>
+                <p class="font-semibold text-text-main text-lg">Menunggu Verifikasi Admin</p>
+                <p class="text-sm text-text-muted mt-2">Bukti pembayaran sudah terkirim. Admin akan memverifikasi dalam waktu singkat.</p>
+                <a href="order.php?id=<?= $id ?>" class="btn-primary mt-5 inline-flex">Lihat Status Pesanan</a>
+            </div>
         <?php else: ?>
             <div class="text-center p-8 bg-leaf-green-light rounded-2xl tonal-shadow">
                 <span class="material-symbols-outlined text-success-green text-5xl mb-3">check_circle</span>

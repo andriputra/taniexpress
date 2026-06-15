@@ -104,9 +104,128 @@ $bottomNav = [
         card.addEventListener('mouseleave', () => card.querySelector('.add-btn')?.classList.remove('scale-110'));
     });
 
-    const grid = document.getElementById('product-grid');
-    document.getElementById('scroll-prev')?.addEventListener('click', () => grid?.scrollBy({ left: -320, behavior: 'smooth' }));
-    document.getElementById('scroll-next')?.addEventListener('click', () => grid?.scrollBy({ left: 320, behavior: 'smooth' }));
+    const carousel = document.getElementById('product-carousel');
+    const carouselPrev = document.getElementById('scroll-prev');
+    const carouselNext = document.getElementById('scroll-next');
+
+    const updateCarouselNav = () => {
+        if (!carousel || !carouselPrev || !carouselNext) return;
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        const atStart = carousel.scrollLeft <= 4;
+        const atEnd = maxScroll <= 4 || carousel.scrollLeft >= maxScroll - 4;
+        carouselPrev.disabled = atStart;
+        carouselNext.disabled = atEnd;
+    };
+
+    const scrollCarousel = (direction) => {
+        if (!carousel) return;
+        const item = carousel.querySelector('.product-carousel-item');
+        const gap = parseFloat(getComputedStyle(carousel).gap) || 16;
+        const step = (item?.offsetWidth ?? 280) + gap;
+        carousel.scrollBy({ left: direction * step, behavior: 'smooth' });
+        window.setTimeout(updateCarouselNav, 350);
+    };
+
+    carouselPrev?.addEventListener('click', () => scrollCarousel(-1));
+    carouselNext?.addEventListener('click', () => scrollCarousel(1));
+    carousel?.addEventListener('scroll', updateCarouselNav, { passive: true });
+    carousel?.addEventListener('scrollend', updateCarouselNav);
+    window.addEventListener('resize', updateCarouselNav);
+    updateCarouselNav();
+
+    const heroSlider = document.getElementById('hero-slider');
+    if (heroSlider) {
+        const slides = heroSlider.querySelectorAll('[data-hero-slide]');
+        const texts = heroSlider.querySelectorAll('[data-hero-text]');
+        const dots = heroSlider.querySelectorAll('.hero-dot');
+        const progress = document.getElementById('hero-progress');
+        const duration = 6500;
+        let current = 0;
+        let timer = null;
+        let progressRaf = null;
+        let progressStart = 0;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const goTo = (index) => {
+            if (!slides.length) return;
+            const next = (index + slides.length) % slides.length;
+            slides[current]?.classList.remove('is-active');
+            slides[current]?.setAttribute('aria-hidden', 'true');
+            texts[current]?.classList.remove('is-active');
+            dots[current]?.classList.remove('is-active');
+            dots[current]?.setAttribute('aria-selected', 'false');
+
+            current = next;
+
+            slides[current]?.classList.add('is-active');
+            slides[current]?.setAttribute('aria-hidden', 'false');
+            texts[current]?.classList.add('is-active');
+            dots[current]?.classList.add('is-active');
+            dots[current]?.setAttribute('aria-selected', 'true');
+            resetProgress();
+        };
+
+        const nextSlide = () => goTo(current + 1);
+        const prevSlide = () => goTo(current - 1);
+
+        const tickProgress = (ts) => {
+            if (!progress) return;
+            if (!progressStart) progressStart = ts;
+            const ratio = Math.min(1, (ts - progressStart) / duration);
+            progress.style.transform = 'scaleX(' + ratio + ')';
+            if (ratio < 1) progressRaf = requestAnimationFrame(tickProgress);
+        };
+
+        const resetProgress = () => {
+            if (!progress || reducedMotion) return;
+            if (progressRaf) cancelAnimationFrame(progressRaf);
+            progress.style.transform = 'scaleX(0)';
+            progressStart = 0;
+            progressRaf = requestAnimationFrame(tickProgress);
+        };
+
+        const startAutoplay = () => {
+            if (reducedMotion || slides.length < 2) return;
+            stopAutoplay();
+            resetProgress();
+            timer = window.setInterval(nextSlide, duration);
+        };
+
+        const stopAutoplay = () => {
+            if (timer) window.clearInterval(timer);
+            timer = null;
+            if (progressRaf) cancelAnimationFrame(progressRaf);
+        };
+
+        const restartAutoplay = () => {
+            stopAutoplay();
+            startAutoplay();
+        };
+
+        document.getElementById('hero-next')?.addEventListener('click', () => { nextSlide(); restartAutoplay(); });
+        document.getElementById('hero-prev')?.addEventListener('click', () => { prevSlide(); restartAutoplay(); });
+        dots.forEach((dot) => dot.addEventListener('click', () => {
+            const idx = parseInt(dot.getAttribute('data-hero-go') || '0', 10);
+            goTo(idx);
+            restartAutoplay();
+        }));
+
+        heroSlider.addEventListener('mouseenter', stopAutoplay);
+        heroSlider.addEventListener('mouseleave', startAutoplay);
+
+        let touchX = 0;
+        heroSlider.addEventListener('touchstart', (e) => {
+            touchX = e.changedTouches[0]?.clientX ?? 0;
+            stopAutoplay();
+        }, { passive: true });
+        heroSlider.addEventListener('touchend', (e) => {
+            const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX;
+            if (Math.abs(dx) > 50) (dx < 0 ? nextSlide : prevSlide)();
+            window.setTimeout(startAutoplay, 2500);
+        }, { passive: true });
+
+        startAutoplay();
+    }
 })();
 </script>
 <?php renderUiScripts(); ?>

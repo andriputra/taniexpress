@@ -1,8 +1,38 @@
 <?php
 require_once __DIR__ . '/includes/bootstrap.php';
 
-$products = getProducts();
-$popularProducts = array_slice($products, 0, 4);
+$popularProducts = getPopularProducts(8);
+
+$heroSlides = [
+    [
+        'badge' => 'Paling Segar Hari Ini',
+        'title' => 'Sayuran Segar Langsung dari Petani',
+        'desc' => 'Nikmati hasil panen terbaik yang dipetik hari ini dan dikirim langsung ke pintu rumah Anda.',
+        'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpNh1RVfev1fkjcwn1FSugvisPsudFtdeUoaPqY0bJTZBRz9_WXApOrLza1MECssg8hBImwzHtbrzz2p1v43SnCiVzoLIDv3mbXihRppNMl8K2L3HmZadG6Y8hwRoBWcx66WtYJl71oQk2cezjjLjIXclDyd4FR8GTlEY4IJb5_uWcfdyyfAo0-dWDi4Ih-TK66ABpFCsW-THx-E2VTeBvQOVA4Hn7IHFZ9sCB-LXmvRLRkL2E23qpfFC7bYjfHgCfp6BnyUtR1yPK',
+        'gradient' => 'from-primary/75',
+    ],
+    [
+        'badge' => 'Dukung Ekonomi Lokal',
+        'title' => 'Belanja Langsung, Petani Lebih Sejahtera',
+        'desc' => 'Setiap pesanan Anda membantu petani lokal mendapat harga adil tanpa perantara.',
+        'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuCPTGFjQjiaPhoPYKiXH5crblDIQ0HNEHZ3yneW9DRyFT1KFM-FjEvs0XA7JQC-pjEnCU6JwOe3LFh1JjE6ceP71Rfd9Un4wz_wDbICTqc_v_A1nnwba2_2DRr2y_PSMvpLfj3hAfXQUR4rEPHKrBcLLRmp55d3dbLWYp8GIxlNqRWiw9BIFeI7kEWhIbReeB7XmO7FVopIjrAAGwKailfQIasWG4DOlpesNFHNZh_Ru4Q0785DUyJsMbIxOn_J8lFGZ5XLzdOBhWKX',
+        'gradient' => 'from-primary/70',
+    ],
+    [
+        'badge' => 'Organik & Alami',
+        'title' => 'Tanpa Pestisida, Lebih Sehat untuk Keluarga',
+        'desc' => 'Produk dipilih dari petani terpercaya dengan praktik pertanian berkelanjutan.',
+        'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuByrmnW0m3b70g_r3ihu4n2RejxRvjWqdBS4Dg27n2FYgqTjRIGXhV2d-8AW7CnviMU7KaK_xqRWYSCmXpsebyXTwJH3cspatmBqmXhoxjJZ6jRBOKI6jHQaXSnTQ4BTh3yVVE-Ux0J4qkEegw7Wb9LrZZyfOukfWD4o0nmRY0SNIayQJBaA4HFMFyVheCliiYt_331b4TD7Ij-qTnwUss_zqL9RmG1dUw5BZYuahH1pTpOTTNOPrTFRxcPrBGhpomC630pMqRLdkMy',
+        'gradient' => 'from-secondary/75',
+    ],
+    [
+        'badge' => 'Pengiriman Cepat',
+        'title' => 'Pesan Hari Ini, Sampai Besok Pagi',
+        'desc' => 'Rantai dingin terjaga agar sayur tetap segar saat tiba di dapur Anda.',
+        'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuBeqgqXXD3hRJARzHP87MpxIREPY3ereUgsyPRY5KbIMO70G5wHcjOm9RXfeaV6iM46PucABxzCozAMwnc8dFnz1qlxqlKZCcMBqu1MQMLk-YMJt5Sdx0gf_00BK59Tp4I-bxF5tE27MwlrhtVh_-dtYaONeQXg_Bx0BvrTKrKoAlCb1v1xICErOgEXklPZZYMpyNVY4Q46VSjgGR_VFut_2RDr0U59GHeIMvG15jvvtpU0vbMWJsltDOGvtLIEC5GU-orWH8SmLy-g',
+        'gradient' => 'from-tertiary/80',
+    ],
+];
 
 $categories = [
     ['nama' => 'Sayuran Hijau', 'desc' => 'Kaya nutrisi, dipetik setiap subuh', 'kategori' => 'Sayuran Hijau', 'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuCPTGFjQjiaPhoPYKiXH5crblDIQ0HNEHZ3yneW9DRyFT1KFM-FjEvs0XA7JQC-pjEnCU6JwOe3LFh1JjE6ceP71Rfd9Un4wz_wDbICTqc_v_A1nnwba2_2DRr2y_PSMvpLfj3hAfXQUR4rEPHKrBcLLRmp55d3dbLWYp8GIxlNqRWiw9BIFeI7kEWhIbReeB7XmO7FVopIjrAAGwKailfQIasWG4DOlpesNFHNZh_Ru4Q0785DUyJsMbIxOn_J8lFGZ5XLzdOBhWKX', 'class' => 'md:col-span-2 md:row-span-2', 'gradient' => 'from-primary/80'],
@@ -19,22 +49,56 @@ include __DIR__ . '/includes/app-header.php';
 ?>
 
 <main class="min-h-screen">
-    <section class="relative w-full h-[min(751px,85vh)] flex items-center overflow-hidden">
+    <section id="hero-slider" class="relative w-full h-[min(680px,88vh)] md:h-[min(751px,85vh)] flex items-center overflow-hidden group">
+        <!-- Background slides -->
         <div class="absolute inset-0 z-0">
-            <img class="w-full h-full object-cover brightness-75" alt="Ladang sayur"
-                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpNh1RVfev1fkjcwn1FSugvisPsudFtdeUoaPqY0bJTZBRz9_WXApOrLza1MECssg8hBImwzHtbrzz2p1v43SnCiVzoLIDv3mbXihRppNMl8K2L3HmZadG6Y8hwRoBWcx66WtYJl71oQk2cezjjLjIXclDyd4FR8GTlEY4IJb5_uWcfdyyfAo0-dWDi4Ih-TK66ABpFCsW-THx-E2VTeBvQOVA4Hn7IHFZ9sCB-LXmvRLRkL2E23qpfFC7bYjfHgCfp6BnyUtR1yPK"/>
-            <div class="absolute inset-0 bg-gradient-to-r from-primary/60 to-transparent"></div>
+            <?php foreach ($heroSlides as $i => $slide): ?>
+                <div class="hero-slide <?= $i === 0 ? 'is-active' : '' ?>" data-hero-slide="<?= $i ?>" aria-hidden="<?= $i === 0 ? 'false' : 'true' ?>">
+                    <img class="hero-slide-img w-full h-full object-cover brightness-[0.72]" src="<?= e($slide['img']) ?>" alt=""/>
+                    <div class="absolute inset-0 bg-gradient-to-r <?= e($slide['gradient']) ?> via-primary/25 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10"></div>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <div class="page-container relative z-10 w-full py-12">
+
+        <!-- Content -->
+        <div class="page-container relative z-10 w-full py-10 md:py-12">
             <div class="max-w-2xl">
-                <span class="inline-block px-4 py-1.5 rounded-full bg-leaf-green-light text-primary text-label-md font-semibold mb-6 uppercase tracking-wider">Paling Segar Hari Ini</span>
-                <h1 class="text-headline-xl text-white mb-6 leading-tight">Sayuran Segar Langsung dari Petani</h1>
-                <p class="text-body-lg text-white/90 mb-10 max-w-lg">Nikmati hasil panen terbaik yang dipetik hari ini dan dikirim langsung ke pintu rumah Anda.</p>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="home.php" class="btn-primary shadow-lg">Mulai Belanja <span class="material-symbols-outlined">arrow_forward</span></a>
-                    <a href="register.php" class="px-8 py-3 bg-white/10 backdrop-blur border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 text-center transition-all">Daftar Gratis</a>
+                <div class="relative min-h-[220px] sm:min-h-[260px] md:min-h-[280px]">
+                    <?php foreach ($heroSlides as $i => $slide): ?>
+                        <div class="hero-text <?= $i === 0 ? 'is-active' : '' ?>" data-hero-text="<?= $i ?>">
+                            <span class="inline-block px-4 py-1.5 rounded-full bg-leaf-green-light text-primary text-label-md font-semibold mb-4 md:mb-6 uppercase tracking-wider shadow-sm"><?= e($slide['badge']) ?></span>
+                            <h1 class="text-[1.75rem] leading-tight sm:text-headline-lg-mobile md:text-headline-xl text-white mb-4 md:mb-6 font-bold"><?= e($slide['title']) ?></h1>
+                            <p class="text-base md:text-body-lg text-white/90 mb-8 md:mb-10 max-w-lg leading-relaxed"><?= e($slide['desc']) ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <a href="home.php" class="btn-primary shadow-lg justify-center">Mulai Belanja <span class="material-symbols-outlined">arrow_forward</span></a>
+                    <a href="register.php" class="px-8 py-3 bg-white/10 backdrop-blur border border-white/25 text-white rounded-xl font-semibold hover:bg-white/20 text-center transition-all">Daftar Gratis</a>
+                </div>
+
+                <!-- Dots -->
+                <div class="flex items-center gap-2 mt-8 md:mt-10" role="tablist" aria-label="Slide beranda">
+                    <?php foreach ($heroSlides as $i => $slide): ?>
+                        <button type="button" class="hero-dot <?= $i === 0 ? 'is-active' : '' ?>" data-hero-go="<?= $i ?>" aria-label="Slide <?= $i + 1 ?>: <?= e($slide['badge']) ?>" role="tab" aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"></button>
+                    <?php endforeach; ?>
                 </div>
             </div>
+        </div>
+
+        <!-- Arrows -->
+        <button type="button" id="hero-prev" class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/15 backdrop-blur border border-white/25 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 md:opacity-100 hover:bg-white/25 transition-all" aria-label="Slide sebelumnya">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button type="button" id="hero-next" class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/15 backdrop-blur border border-white/25 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 md:opacity-100 hover:bg-white/25 transition-all" aria-label="Slide berikutnya">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+
+        <!-- Progress bar -->
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
+            <div id="hero-progress" class="h-full bg-leaf-green-light/90 origin-left scale-x-0"></div>
         </div>
     </section>
 
@@ -87,15 +151,24 @@ include __DIR__ . '/includes/app-header.php';
     </section>
 
     <section class="py-16 md:py-24 page-container">
-        <div class="flex items-center justify-between mb-10">
-            <h2 class="text-headline-lg text-text-main">Produk Terpopuler</h2>
-            <div class="flex gap-2">
-                <button type="button" id="scroll-prev" class="icon-btn border border-outline-variant"><span class="material-symbols-outlined">arrow_back</span></button>
-                <button type="button" id="scroll-next" class="icon-btn border border-outline-variant"><span class="material-symbols-outlined">arrow_forward</span></button>
+        <div class="flex items-end justify-between gap-4 mb-10">
+            <div>
+                <h2 class="text-headline-lg text-text-main">Produk Terpopuler</h2>
+                <p class="text-body-md text-text-muted mt-1">Berdasarkan jumlah penjualan</p>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                <button type="button" id="scroll-prev" class="icon-btn border border-outline-variant disabled:opacity-40 disabled:pointer-events-none" aria-label="Produk sebelumnya"><span class="material-symbols-outlined">arrow_back</span></button>
+                <button type="button" id="scroll-next" class="icon-btn border border-outline-variant disabled:opacity-40 disabled:pointer-events-none" aria-label="Produk berikutnya"><span class="material-symbols-outlined">arrow_forward</span></button>
             </div>
         </div>
-        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-gutter">
-            <?php foreach ($popularProducts as $p): renderProductCard($p, 'index.php'); endforeach; ?>
+        <div class="overflow-hidden -mx-1 px-1">
+            <div id="product-carousel" class="flex gap-4 w-full overflow-x-auto hide-scrollbar scroll-smooth snap-x snap-mandatory pb-1">
+                <?php foreach ($popularProducts as $p): ?>
+                    <div class="product-carousel-item flex-none w-[260px] sm:w-[280px] md:w-[300px] snap-start">
+                        <?php renderProductCard($p, 'index.php'); ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
     </section>
 

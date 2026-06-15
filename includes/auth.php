@@ -87,3 +87,40 @@ function requireAdmin(): void
         redirect('admin/login.php');
     }
 }
+
+function updateUserPassword(int $userId, string $currentPassword, string $newPassword, string $confirmPassword): array
+{
+    if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+        return ['ok' => false, 'message' => 'Semua field password wajib diisi.'];
+    }
+    if (strlen($newPassword) < 6) {
+        return ['ok' => false, 'message' => 'Password baru minimal 6 karakter.'];
+    }
+    if ($newPassword !== $confirmPassword) {
+        return ['ok' => false, 'message' => 'Konfirmasi password tidak cocok.'];
+    }
+
+    $stmt = db()->prepare('SELECT password FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+    if (!$row || !password_verify($currentPassword, $row['password'])) {
+        return ['ok' => false, 'message' => 'Password lama salah.'];
+    }
+
+    db()->prepare('UPDATE users SET password = ? WHERE id = ?')->execute([
+        password_hash($newPassword, PASSWORD_DEFAULT),
+        $userId,
+    ]);
+
+    return ['ok' => true, 'message' => 'Password berhasil diperbarui.'];
+}
+
+function updateUserProfile(int $userId, string $nama, string $telepon, string $alamat): void
+{
+    db()->prepare('UPDATE users SET nama=?, telepon=?, alamat=? WHERE id=?')->execute([
+        trim($nama),
+        trim($telepon),
+        trim($alamat),
+        $userId,
+    ]);
+}

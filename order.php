@@ -38,8 +38,8 @@ if ($currentStepIndex === false) {
 
 // Konfirmasi terima pesanan
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_received']) && $order['status'] === 'sampai') {
-    db()->prepare('UPDATE pesanan SET status = "selesai" WHERE id = ?')->execute([$id]);
-    flash('success', 'Terima kasih! Pesanan selesai.');
+    $result = updateOrderStatus($id, 'selesai');
+    flash($result['ok'] ? 'success' : 'error', $result['message']);
     redirect('order.php?id=' . $id);
 }
 
@@ -113,7 +113,7 @@ include __DIR__ . '/includes/app-header.php';
             <?php endif; ?>
 
             <?php if ($order['status'] === 'sampai'): ?>
-                <form method="POST" class="mt-4">
+                <form method="POST" class="mt-4" data-confirm="Konfirmasi pesanan sudah Anda terima?" data-confirm-title="Pesanan Diterima">
                     <button type="submit" name="confirm_received" value="1" class="w-full py-3 bg-success-green text-white rounded-xl font-semibold">
                         Pesanan Sudah Diterima
                     </button>

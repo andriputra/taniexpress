@@ -137,6 +137,20 @@ $isLanding = $isLanding ?? false;
         .page-main { padding-bottom:7rem; }
         @media(min-width:768px){ .page-main { padding-bottom:3rem; } }
         .safe-bottom { padding-bottom:env(safe-area-inset-bottom,0); }
+        <?= passwordToggleCss() ?>
+        .hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 1s ease; pointer-events:none; }
+        .hero-slide.is-active { opacity:1; pointer-events:auto; }
+        .hero-slide-img { transform:scale(1.08); transition:transform 7s ease-out; }
+        .hero-slide.is-active .hero-slide-img { transform:scale(1); }
+        .hero-text { position:absolute; inset:0; opacity:0; transform:translateY(18px); transition:opacity .65s ease, transform .65s ease; pointer-events:none; }
+        .hero-text.is-active { opacity:1; transform:translateY(0); pointer-events:auto; }
+        .hero-dot { width:2.25rem; height:.35rem; border-radius:9999px; background:rgba(255,255,255,.35); transition:all .3s ease; }
+        .hero-dot.is-active { width:2.75rem; background:#D8F3DC; }
+        #hero-progress { transition:transform .15s linear; }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-slide, .hero-slide-img, .hero-text, #hero-progress { transition:none !important; }
+            .hero-slide-img { transform:none !important; }
+        }
     </style>
 </head>
 <body class="<?= $isLanding ? 'text-on-background overflow-x-hidden' : 'bg-background text-on-surface' ?>">

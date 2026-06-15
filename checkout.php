@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stockStmt->rowCount() === 0) {
                     throw new Exception('Stok ' . $item['produk_nama'] . ' tidak mencukupi.');
                 }
+                refreshProductStockTotal((int) $item['product_id']);
             }
 
             $pdo->commit();

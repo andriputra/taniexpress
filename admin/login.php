@@ -34,6 +34,7 @@ if ($error) pushToast('error', $error);
         .input-field:focus{border-color:#0f5238;box-shadow:0 0 0 3px rgba(15,82,56,.15)}
         .btn-primary{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:.875rem 1.5rem;background:#0f5238;color:#fff;border-radius:9999px;font-weight:600;transition:all .2s}
         .btn-primary:hover{background:#2d6a4f}
+        <?= passwordToggleCss() ?>
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-[#f9f9f8] px-4">
@@ -47,10 +48,7 @@ if ($error) pushToast('error', $error);
                 <label class="block text-sm font-medium text-text-muted mb-1.5">Email Admin</label>
                 <input type="email" name="email" required class="input-field"/>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-text-muted mb-1.5">Password</label>
-                <input type="password" name="password" required class="input-field"/>
-            </div>
+            <?php renderPasswordField('Password', 'password', ['required' => true, 'autocomplete' => 'current-password']); ?>
             <button type="submit" class="btn-primary">Masuk Admin</button>
         </form>
         <p class="text-center text-xs text-gray-400 mt-6"><a href="../index.php" class="text-[#0f5238]">← Kembali ke Toko</a></p>
