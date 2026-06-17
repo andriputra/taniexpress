@@ -22,10 +22,7 @@ $bottomNav = [
     <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
             <div class="flex items-center gap-2 mb-4">
-                <span class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1">eco</span>
-                </span>
-                <span class="font-bold text-primary text-lg"><?= e(APP_NAME) ?></span>
+                <?php renderBrandLogo('md'); ?>
             </div>
             <p class="text-sm text-on-surface-variant leading-relaxed">Menghubungkan dapur Anda dengan ladang petani lokal terbaik di Indonesia.</p>
         </div>

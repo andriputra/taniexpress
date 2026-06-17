@@ -11,6 +11,11 @@ $order = $stmt->fetch();
 
 if (!$order) { flash('error', 'Pesanan tidak ditemukan.'); redirect('orders.php'); }
 
+$qrisImage = getQrisImage();
+$qrisMerchant = getQrisMerchantName();
+$qrisNotes = getAppSetting('qris_notes', '') ?? '';
+$qrisReady = $qrisImage !== null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($order['status'] !== 'menunggu_pembayaran') {
         flash('error', 'Pesanan sudah dibayar.');
@@ -45,21 +50,38 @@ include __DIR__ . '/includes/app-header.php';
             <span class="inline-flex items-center gap-2 px-4 py-2 bg-leaf-green-light text-primary rounded-full text-sm font-semibold mb-4">
                 <span class="material-symbols-outlined text-[18px]">qr_code_2</span> Scan QRIS
             </span>
+            <?php if ($qrisMerchant): ?>
+                <p class="text-sm font-medium text-text-main mb-1"><?= e($qrisMerchant) ?></p>
+            <?php endif; ?>
             <p class="text-sm text-text-muted mb-1">Total Pembayaran</p>
-            <p class="text-3xl font-bold text-primary mb-6"><?= formatRupiah($order['total']) ?></p>
-            <div class="inline-block p-4 bg-white rounded-xl border border-outline-variant mb-4">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TaniExpress-<?= urlencode($order['kode_pesanan']) ?>-<?= $order['total'] ?>" alt="QRIS" class="w-44 h-44 mx-auto"/>
-            </div>
-            <ol class="text-left text-sm text-on-surface-variant space-y-1.5 bg-surface-container-low rounded-xl p-4">
-                <li>1. Buka e-wallet / mobile banking</li>
-                <li>2. Pilih bayar via QRIS</li>
-                <li>3. Scan kode QR di atas</li>
-                <li>4. Bayar <strong><?= formatRupiah($order['total']) ?></strong></li>
-                <li>5. Upload screenshot bukti di bawah</li>
-            </ol>
+            <p class="text-3xl font-bold text-primary mb-2"><?= formatRupiah($order['total']) ?></p>
+            <p class="text-xs text-text-muted mb-6">Kode pesanan: <?= e($order['kode_pesanan']) ?></p>
+
+            <?php if ($qrisReady): ?>
+                <div class="inline-block p-4 bg-white rounded-xl border border-outline-variant mb-4 shadow-sm">
+                    <img src="<?= e(mediaSrc($qrisImage)) ?>" alt="QRIS <?= e($qrisMerchant) ?>"
+                         class="w-48 h-48 sm:w-52 sm:h-52 object-contain mx-auto"/>
+                </div>
+                <?php if ($qrisNotes !== ''): ?>
+                    <p class="text-sm text-on-surface-variant bg-surface-container-low rounded-xl p-3 mb-4 text-left"><?= e($qrisNotes) ?></p>
+                <?php endif; ?>
+                <ol class="text-left text-sm text-on-surface-variant space-y-1.5 bg-surface-container-low rounded-xl p-4">
+                    <li>1. Buka e-wallet / mobile banking</li>
+                    <li>2. Pilih bayar via QRIS</li>
+                    <li>3. Scan kode QR di atas</li>
+                    <li>4. Masukkan nominal <strong><?= formatRupiah($order['total']) ?></strong> jika diminta</li>
+                    <li>5. Selesaikan pembayaran lalu upload screenshot bukti di bawah</li>
+                </ol>
+            <?php else: ?>
+                <div class="rounded-xl bg-tertiary-container/10 border border-tertiary-container/20 p-6 mb-4">
+                    <span class="material-symbols-outlined text-tertiary-container text-4xl mb-2">hourglass_empty</span>
+                    <p class="font-medium text-text-main">QRIS belum tersedia</p>
+                    <p class="text-sm text-text-muted mt-2">Admin sedang menyiapkan kode QRIS. Silakan coba lagi nanti atau hubungi customer service.</p>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <?php if ($order['status'] === 'menunggu_pembayaran'): ?>
+        <?php if ($order['status'] === 'menunggu_pembayaran' && $qrisReady): ?>
             <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl p-6 tonal-shadow">
                 <h2 class="font-semibold text-text-main mb-4">Upload Bukti Pembayaran</h2>
                 <p class="text-sm text-text-muted mb-4">Scan QRIS, bayar sesuai total, lalu upload screenshot bukti transfer.</p>

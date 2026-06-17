@@ -12,6 +12,7 @@ $menus = [
     'produk-petani' => ['icon' => 'link', 'label' => 'Produk-Petani', 'url' => 'produk-petani.php'],
     'kurir' => ['icon' => 'local_shipping', 'label' => 'Kurir', 'url' => 'kurir.php'],
     'pesanan' => ['icon' => 'shopping_cart', 'label' => 'Pesanan', 'url' => 'pesanan.php'],
+    'pengaturan' => ['icon' => 'qr_code_2', 'label' => 'QRIS', 'url' => 'pengaturan.php'],
     'laporan' => ['icon' => 'description', 'label' => 'Laporan', 'url' => 'laporan.php'],
     'account' => ['icon' => 'person', 'label' => 'Akun', 'url' => 'account.php'],
 ];
@@ -22,6 +23,7 @@ $menus = [
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title><?= e($pageTitle) ?> - Admin <?= e(APP_NAME) ?></title>
+    <?php renderFaviconTags(true); ?>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet"/>
@@ -89,8 +91,8 @@ $menus = [
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-[70] flex flex-col w-[min(88vw,17rem)] md:w-64 h-screen border-r border-outline-variant bg-surface-container-low transition-transform duration-300 ease-out no-print">
     <div class="px-5 py-5 md:px-6 md:py-6 flex items-center justify-between gap-3">
         <div class="min-w-0">
-            <h1 class="text-lg md:text-xl font-bold text-primary truncate"><?= e(APP_NAME) ?></h1>
-            <p class="text-xs text-text-muted mt-0.5">Panel Admin</p>
+            <a href="index.php" class="inline-block"><?php renderBrandLogo('lg', true); ?></a>
+            <p class="text-xs text-text-muted mt-2">Panel Admin</p>
         </div>
         <button type="button" id="admin-menu-close" class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-outline hover:bg-leaf-green-light hover:text-primary shrink-0" aria-label="Tutup menu">
             <span class="material-symbols-outlined">close</span>

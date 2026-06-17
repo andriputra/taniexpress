@@ -13,6 +13,9 @@ $subtotal = cartTotal();
 $ongkir = ONGKIR_DEFAULT;
 $platform = BIAYA_PLATFORM;
 $total = $subtotal + $ongkir + $platform;
+$qrisImage = getQrisImage();
+$qrisMerchant = getQrisMerchantName();
+$qrisReady = $qrisImage !== null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama = trim($_POST['nama_penerima'] ?? '');
@@ -104,7 +107,31 @@ include __DIR__ . '/includes/app-header.php';
                         <span>Total Bayar</span><span><?= formatRupiah($total) ?></span>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary w-full"><span class="material-symbols-outlined">payments</span> Bayar Sekarang</button>
+
+                <div class="bg-white rounded-2xl p-5 tonal-shadow mb-4 border border-primary/10">
+                    <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[20px]">payments</span>
+                        Metode Pembayaran
+                    </h3>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-leaf-green-light/60">
+                        <span class="material-symbols-outlined text-primary">qr_code_2</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm text-text-main">QRIS</p>
+                            <p class="text-xs text-text-muted truncate"><?= e($qrisMerchant) ?></p>
+                        </div>
+                        <?php if ($qrisReady): ?>
+                            <img src="<?= e(mediaSrc($qrisImage)) ?>" alt="QRIS" class="w-12 h-12 object-contain rounded-lg border border-outline-variant/40 bg-white shrink-0"/>
+                        <?php else: ?>
+                            <span class="text-[10px] px-2 py-1 rounded-full bg-tertiary-container/20 text-tertiary-container shrink-0">Menunggu</span>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-xs text-text-muted mt-3">Setelah pesanan dibuat, Anda akan memindai QRIS dan membayar sesuai total di atas.</p>
+                </div>
+
+                <button type="submit" class="btn-primary w-full" <?= $qrisReady ? '' : 'disabled title="QRIS belum diatur admin"' ?>>
+                    <span class="material-symbols-outlined">payments</span>
+                    <?= $qrisReady ? 'Bayar Sekarang' : 'QRIS Belum Tersedia' ?>
+                </button>
             </div>
         </form>
     </div>

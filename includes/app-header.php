@@ -29,10 +29,7 @@ $accountUrl = $user ? 'account.php' : 'login.php';
                     </button>
                 <?php endif; ?>
                 <a href="index.php" class="flex items-center gap-2 shrink-0 group">
-                    <span class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm group-hover:bg-primary-container transition-colors">
-                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1">eco</span>
-                    </span>
-                    <span class="hidden sm:block text-lg font-bold text-primary tracking-tight"><?= e(APP_NAME) ?></span>
+                    <?php renderBrandLogo('md'); ?>
                 </a>
             </div>
 
@@ -89,11 +86,8 @@ $accountUrl = $user ? 'account.php' : 'login.php';
     <aside class="absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col">
         <div class="p-5 border-b border-outline-variant/30 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">eco</span>
-                </span>
+                <?php renderBrandLogo('lg'); ?>
                 <div>
-                    <p class="font-bold text-primary"><?= e(APP_NAME) ?></p>
                     <p class="text-xs text-text-muted">Sayur segar dari petani</p>
                 </div>
             </div>

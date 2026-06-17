@@ -25,8 +25,8 @@ include __DIR__ . '/includes/app-header.php';
 <main class="min-h-[80vh] flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined text-3xl" style="font-variation-settings:'FILL' 1">eco</span>
+            <div class="mb-4 flex justify-center">
+                <?php renderBrandLogo('xl'); ?>
             </div>
             <h1 class="text-2xl font-bold text-text-main">Gabung TaniExpress</h1>
             <p class="text-text-muted mt-2">Daftar dan nikmati sayur segar dari petani</p>

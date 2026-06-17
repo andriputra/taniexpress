@@ -36,6 +36,18 @@ try {
         }
     }
 
+    $hasAppSettings = (bool) $pdo->query("SHOW TABLES LIKE 'app_settings'")->fetch();
+    if (!$hasAppSettings) {
+        $pdo->exec('
+            CREATE TABLE app_settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ');
+        echo "Migrasi: tabel app_settings ditambahkan.\n";
+    }
+
     $sql = file_get_contents(__DIR__ . '/database/schema.sql');
     $statements = array_filter(array_map('trim', explode(';', $sql)));
 

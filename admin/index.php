@@ -16,6 +16,9 @@ $recentOrders = db()->query("
 
 $kurirList = db()->query("SELECT k.*, COUNT(p.id) AS active_orders FROM kurir k LEFT JOIN pesanan p ON p.kurir_id = k.id AND p.status = 'dikirim' GROUP BY k.id")->fetchAll();
 
+$qrisConfigured = isQrisConfigured();
+$qrisMerchant = getQrisMerchantName();
+
 $pageTitle = 'Dashboard';
 $activeMenu = 'dashboard';
 include __DIR__ . '/../includes/admin-layout-start.php';
@@ -41,6 +44,30 @@ include __DIR__ . '/../includes/admin-layout-start.php';
         <p class="text-2xl md:text-3xl font-bold text-success-green mt-1"><?= $kurirTersedia ?></p>
     </div>
 </div>
+
+<a href="pengaturan.php" class="block mb-6 md:mb-8 group">
+    <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-outline-variant/30 transition group-hover:border-primary/30 group-hover:shadow-md">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 <?= $qrisConfigured ? 'bg-leaf-green-light text-primary' : 'bg-tertiary-container/15 text-tertiary-container' ?>">
+                    <span class="material-symbols-outlined text-2xl">qr_code_2</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="font-semibold text-text-main">Pembayaran QRIS</p>
+                    <?php if ($qrisConfigured): ?>
+                        <p class="text-sm text-text-muted truncate">Aktif — <?= e($qrisMerchant) ?></p>
+                    <?php else: ?>
+                        <p class="text-sm text-tertiary-container">Belum diatur — unggah gambar QRIS agar pelanggan bisa bayar</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <span class="inline-flex items-center justify-center gap-1 text-sm font-medium text-primary shrink-0">
+                <?= $qrisConfigured ? 'Kelola QRIS' : 'Atur Sekarang' ?>
+                <span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+            </span>
+        </div>
+    </div>
+</a>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
     <div class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">

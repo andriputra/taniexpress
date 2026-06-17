@@ -13,5 +13,7 @@ define('ONGKIR_DEFAULT', 15000);
 define('BIAYA_PLATFORM', 5000);
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('UPLOAD_URL', 'uploads/');
+define('APP_LOGO', 'assets/logo.png');
+define('APP_FAVICON', 'assets/favicon.png');
 
 date_default_timezone_set('Asia/Jakarta');

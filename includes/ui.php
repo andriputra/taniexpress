@@ -15,6 +15,31 @@ function uiNavItems(): array
     ];
 }
 
+function renderBrandLogo(string $size = 'md', bool $fromAdmin = false, array $attrs = []): void
+{
+    $heights = [
+        'sm' => 'h-7',
+        'md' => 'h-9',
+        'lg' => 'h-11',
+        'xl' => 'h-14',
+    ];
+    $height = $heights[$size] ?? $heights['md'];
+    $class = trim($height . ' w-auto object-contain ' . ($attrs['class'] ?? ''));
+    $alt = $attrs['alt'] ?? APP_NAME;
+    ?>
+    <img src="<?= e(appLogoSrc($fromAdmin)) ?>" alt="<?= e($alt) ?>" class="<?= e($class) ?>"<?= !empty($attrs['loading']) ? ' loading="' . e($attrs['loading']) . '"' : '' ?>/>
+    <?php
+}
+
+function renderFaviconTags(bool $fromAdmin = false): void
+{
+    $href = appFaviconSrc($fromAdmin);
+    ?>
+    <link rel="icon" type="image/png" href="<?= e($href) ?>"/>
+    <link rel="apple-touch-icon" href="<?= e($href) ?>"/>
+    <?php
+}
+
 function uiNavClass(string $key, string $activeNav, string $variant = 'desktop'): string
 {
     $active = $activeNav === $key;

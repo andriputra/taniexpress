@@ -93,6 +93,12 @@ CREATE TABLE pesanan_detil (
     FOREIGN KEY (produk_petani_id) REFERENCES produk_petani(id)
 );
 
+CREATE TABLE app_settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Akun default (password: admin123 / customer123)
 INSERT INTO users (nama, email, password, role, telepon, alamat) VALUES
 ('Admin TaniExpress', 'admin@taniexpress.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '081234567890', 'Jl. Pertanian No. 88, Lembang'),

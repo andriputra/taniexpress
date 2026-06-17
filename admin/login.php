@@ -22,6 +22,7 @@ if ($error) pushToast('error', $error);
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Login Admin - <?= e(APP_NAME) ?></title>
+    <?php renderFaviconTags(true); ?>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet"/>
@@ -40,7 +41,9 @@ if ($error) pushToast('error', $error);
 <body class="min-h-screen flex items-center justify-center bg-[#f9f9f8] px-4">
     <div class="w-full max-w-md bg-white rounded-3xl tonal-shadow p-8 border border-[#bfc9c1]/30">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-[#0f5238]"><?= e(APP_NAME) ?></h1>
+            <div class="mb-4 flex justify-center">
+                <?php renderBrandLogo('xl', true); ?>
+            </div>
             <p class="text-[#52796F] text-sm mt-1">Panel Administrator</p>
         </div>
         <form method="POST" class="space-y-4">

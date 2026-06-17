@@ -6,6 +6,13 @@ $popularProducts = getPopularProducts(8);
 $heroSlides = [
     [
         'badge' => 'Paling Segar Hari Ini',
+        'title' => 'Empowering Farmers Through Smart Distribution.',
+        'desc' => 'Memotong rantai pasok tradisional dengan teknologi distribusi pintar',
+        'img' => '/assets/slide.png',
+        'gradient' => 'from-primary/75',
+    ],
+    [
+        'badge' => 'Paling Segar Hari Ini',
         'title' => 'Sayuran Segar Langsung dari Petani',
         'desc' => 'Nikmati hasil panen terbaik yang dipetik hari ini dan dikirim langsung ke pintu rumah Anda.',
         'img' => 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpNh1RVfev1fkjcwn1FSugvisPsudFtdeUoaPqY0bJTZBRz9_WXApOrLza1MECssg8hBImwzHtbrzz2p1v43SnCiVzoLIDv3mbXihRppNMl8K2L3HmZadG6Y8hwRoBWcx66WtYJl71oQk2cezjjLjIXclDyd4FR8GTlEY4IJb5_uWcfdyyfAo0-dWDi4Ih-TK66ABpFCsW-THx-E2VTeBvQOVA4Hn7IHFZ9sCB-LXmvRLRkL2E23qpfFC7bYjfHgCfp6BnyUtR1yPK',

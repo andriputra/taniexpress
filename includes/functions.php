@@ -43,6 +43,16 @@ function mediaSrc(?string $path, bool $fromAdmin = false): ?string
     return ($fromAdmin ? '../' : '') . ltrim($path, '/');
 }
 
+function appLogoSrc(bool $fromAdmin = false): string
+{
+    return mediaSrc(APP_LOGO, $fromAdmin) ?? APP_LOGO;
+}
+
+function appFaviconSrc(bool $fromAdmin = false): string
+{
+    return mediaSrc(APP_FAVICON, $fromAdmin) ?? APP_FAVICON;
+}
+
 function e(?string $value): string
 {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
@@ -612,4 +622,74 @@ function pdoErrorMessage(PDOException $e): string
         return 'Data tidak dapat dihapus karena masih terhubung dengan data lain.';
     }
     return 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.';
+}
+
+function ensureAppSettingsTable(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    $exists = db()->query("SHOW TABLES LIKE 'app_settings'")->fetch();
+    if (!$exists) {
+        db()->exec('
+            CREATE TABLE app_settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ');
+    }
+}
+
+function getAppSetting(string $key, ?string $default = null): ?string
+{
+    ensureAppSettingsTable();
+    $stmt = db()->prepare('SELECT setting_value FROM app_settings WHERE setting_key = ?');
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value !== false ? (string) $value : $default;
+}
+
+function setAppSetting(string $key, ?string $value): void
+{
+    ensureAppSettingsTable();
+    if ($value === null || $value === '') {
+        db()->prepare('DELETE FROM app_settings WHERE setting_key = ?')->execute([$key]);
+        return;
+    }
+    db()->prepare('
+        INSERT INTO app_settings (setting_key, setting_value)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+    ')->execute([$key, $value]);
+}
+
+function removeUploadedFile(?string $relativePath): void
+{
+    if (!$relativePath || str_starts_with($relativePath, 'http://') || str_starts_with($relativePath, 'https://')) {
+        return;
+    }
+    $file = UPLOAD_DIR . basename($relativePath);
+    if (is_file($file)) {
+        @unlink($file);
+    }
+}
+
+function getQrisImage(): ?string
+{
+    $path = getAppSetting('qris_image');
+    return $path ?: null;
+}
+
+function getQrisMerchantName(): string
+{
+    return getAppSetting('qris_merchant_name', APP_NAME) ?: APP_NAME;
+}
+
+function isQrisConfigured(): bool
+{
+    return getQrisImage() !== null;
 }
