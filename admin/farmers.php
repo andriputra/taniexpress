@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/bootstrap.php';
 requireAdmin();
+ensurePetaniCeritaColumn();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -9,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nama = trim($_POST['nama'] ?? '');
         $telepon = trim($_POST['telepon'] ?? '');
         $alamat = trim($_POST['alamat'] ?? '');
+        $ceritaPetani = trim($_POST['cerita_petani'] ?? '');
+        $profilPetani = trim($_POST['profil_petani'] ?? '');
         $foto = $action === 'update' ? ($_POST['foto_lama'] ?? null) : null;
 
         if (empty($nama) || empty($telepon) || empty($alamat)) {
@@ -30,12 +33,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'create') {
-            db()->prepare('INSERT INTO petani (nama, telepon, alamat, foto) VALUES (?,?,?,?)')
-                ->execute([$nama, $telepon, $alamat, $foto]);
+            ensurePetaniCeritaColumn();
+            db()->prepare('INSERT INTO petani (nama, telepon, alamat, cerita_petani, profil_petani, foto) VALUES (?,?,?,?,?,?)')
+                ->execute([
+                    $nama, $telepon, $alamat,
+                    $ceritaPetani !== '' ? $ceritaPetani : null,
+                    $profilPetani !== '' ? $profilPetani : null,
+                    $foto,
+                ]);
             flash('success', 'Data petani berhasil ditambahkan.');
         } else {
-            db()->prepare('UPDATE petani SET nama=?, telepon=?, alamat=?, foto=? WHERE id=?')
-                ->execute([$nama, $telepon, $alamat, $foto, (int) $_POST['id']]);
+            ensurePetaniCeritaColumn();
+            db()->prepare('UPDATE petani SET nama=?, telepon=?, alamat=?, cerita_petani=?, profil_petani=?, foto=? WHERE id=?')
+                ->execute([
+                    $nama, $telepon, $alamat,
+                    $ceritaPetani !== '' ? $ceritaPetani : null,
+                    $profilPetani !== '' ? $profilPetani : null,
+                    $foto, (int) $_POST['id'],
+                ]);
             flash('success', 'Data petani berhasil diperbarui.');
         }
     } elseif ($action === 'delete') {
@@ -169,6 +184,20 @@ include __DIR__ . '/../includes/admin-layout-start.php';
             <div>
                 <label class="block text-xs font-semibold text-text-muted mb-1.5">Alamat</label>
                 <textarea name="alamat" required rows="2" placeholder="Kecamatan, Kota" class="input-field text-sm"><?= e($edit['alamat'] ?? '') ?></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-text-muted mb-1.5">Mengenal Petani Anda</label>
+                <textarea name="cerita_petani" rows="4" maxlength="500"
+                          placeholder="Contoh: Saya percaya sayur yang ditanam dengan kasih sayang akan memberikan kesehatan yang lebih baik bagi yang memakannya."
+                          class="input-field text-sm"><?= e($edit['cerita_petani'] ?? '') ?></textarea>
+                <p class="text-[11px] text-text-muted mt-1.5 leading-relaxed">Kutipan singkat petani. Ditampilkan di halaman produk.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-text-muted mb-1.5">Profil Lengkap Petani</label>
+                <textarea name="profil_petani" rows="6" maxlength="2000"
+                          placeholder="Ceritakan latar belakang petani, cara bertani, komitmen kualitas, dan apa yang membuat produknya istimewa..."
+                          class="input-field text-sm"><?= e($edit['profil_petani'] ?? '') ?></textarea>
+                <p class="text-[11px] text-text-muted mt-1.5 leading-relaxed">Ditampilkan di halaman belanja saat pembeli memfilter produk per petani (contoh: home.php?petani=1).</p>
             </div>
 
             <button type="submit" class="w-full py-3 bg-primary text-white rounded-full text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm">

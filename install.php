@@ -48,6 +48,43 @@ try {
         echo "Migrasi: tabel app_settings ditambahkan.\n";
     }
 
+    $hasPetani = (bool) $pdo->query("SHOW TABLES LIKE 'petani'")->fetch();
+    if ($hasPetani) {
+        $hasCeritaPetani = (bool) $pdo->query("SHOW COLUMNS FROM petani LIKE 'cerita_petani'")->fetch();
+        if (!$hasCeritaPetani) {
+            $pdo->exec('ALTER TABLE petani ADD COLUMN cerita_petani TEXT DEFAULT NULL AFTER alamat');
+            echo "Migrasi: kolom petani.cerita_petani ditambahkan.\n";
+        }
+        $hasProfilPetani = (bool) $pdo->query("SHOW COLUMNS FROM petani LIKE 'profil_petani'")->fetch();
+        if (!$hasProfilPetani) {
+            $pdo->exec('ALTER TABLE petani ADD COLUMN profil_petani TEXT DEFAULT NULL AFTER cerita_petani');
+            echo "Migrasi: kolom petani.profil_petani ditambahkan.\n";
+        }
+    }
+
+    $hasHeroSlides = (bool) $pdo->query("SHOW TABLES LIKE 'hero_slides'")->fetch();
+    if (!$hasHeroSlides) {
+        $pdo->exec("
+            CREATE TABLE hero_slides (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                badge VARCHAR(100) NOT NULL,
+                judul VARCHAR(255) NOT NULL,
+                deskripsi TEXT NOT NULL,
+                gambar VARCHAR(500) NOT NULL,
+                gradient VARCHAR(80) NOT NULL DEFAULT 'from-primary/80',
+                btn_utama_label VARCHAR(100) NOT NULL DEFAULT 'Mulai Belanja',
+                btn_utama_url VARCHAR(255) NOT NULL DEFAULT 'home.php',
+                btn_sekunder_label VARCHAR(100) DEFAULT 'Daftar Gratis',
+                btn_sekunder_url VARCHAR(255) DEFAULT 'register.php',
+                urutan INT NOT NULL DEFAULT 0,
+                aktif TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ");
+        echo "Migrasi: tabel hero_slides ditambahkan.\n";
+    }
+
     $sql = file_get_contents(__DIR__ . '/database/schema.sql');
     $statements = array_filter(array_map('trim', explode(';', $sql)));
 

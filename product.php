@@ -7,6 +7,7 @@ if (!$product) { flash('error', 'Produk tidak ditemukan.'); redirect('home.php')
 
 $related = getRelatedProducts($id, $product['kategori']);
 $stokMenipis = $product['stok'] < 10;
+$petaniCerita = trim($product['petani_cerita'] ?? '');
 
 $pageTitle = $product['nama'];
 $activeNav = 'belanja';
@@ -117,21 +118,23 @@ include __DIR__ . '/includes/app-header.php';
                     </section>
 
                     <!-- Petani card -->
+                    <?php if ($petaniCerita !== ''): ?>
                     <section class="rounded-2xl overflow-hidden border border-outline-variant/25">
                         <div class="bg-leaf-green-light/40 px-5 py-3 flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-[20px]">agriculture</span>
                             <h3 class="text-sm font-bold text-primary uppercase tracking-wide">Mengenal Petani Anda</h3>
                         </div>
                         <div class="p-5 bg-white">
-                            <p class="text-on-surface-variant italic text-sm leading-relaxed mb-3">"Saya percaya sayur yang ditanam dengan kasih sayang akan memberikan kesehatan yang lebih baik bagi yang memakannya."</p>
-                            <div class="flex items-center justify-between">
-                                <p class="font-bold text-primary text-sm">— <?= e($product['petani_nama']) ?></p>
-                                <a href="home.php?kategori=<?= urlencode($product['kategori']) ?>" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                            <p class="text-on-surface-variant italic text-sm leading-relaxed mb-3">"<?= e($petaniCerita) ?>"</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="font-bold text-primary text-sm shrink-0">— <?= e($product['petani_nama']) ?></p>
+                                <a href="home.php?petani=<?= (int) ($product['petani_id'] ?? 0) ?>" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1 shrink-0">
                                     Lihat produk lain <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                                 </a>
                             </div>
                         </div>
                     </section>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

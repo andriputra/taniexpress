@@ -6,7 +6,7 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
-define('APP_NAME', 'TaniExpress');
+define('APP_NAME', 'TaniXpress');
 define('BASE_URL', '/'); // sesuaikan jika di subfolder, misal: '/taniexpress/'
 
 define('ONGKIR_DEFAULT', 15000);

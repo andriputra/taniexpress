@@ -279,9 +279,11 @@ function getPopularProducts(int $limit = 8): array
 
 function getProductDetail(int $produkPetaniId): ?array
 {
+    ensurePetaniCeritaColumn();
     $stmt = db()->prepare("
         SELECT pp.*, p.nama, p.kategori, p.satuan, p.berat, p.deskripsi, p.gambar,
-               pt.id AS petani_id, pt.nama AS petani_nama, pt.alamat AS petani_alamat, pt.foto AS petani_foto
+               pt.id AS petani_id, pt.nama AS petani_nama, pt.alamat AS petani_alamat,
+               pt.foto AS petani_foto, pt.cerita_petani AS petani_cerita
         FROM produk_petani pp
         JOIN products p ON p.id = pp.product_id
         JOIN petani pt ON pt.id = pp.petani_id
@@ -692,4 +694,174 @@ function getQrisMerchantName(): string
 function isQrisConfigured(): bool
 {
     return getQrisImage() !== null;
+}
+
+function ensurePetaniCeritaColumn(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    $hasPetani = db()->query("SHOW TABLES LIKE 'petani'")->fetch();
+    if (!$hasPetani) {
+        return;
+    }
+
+    $hasCerita = db()->query("SHOW COLUMNS FROM petani LIKE 'cerita_petani'")->fetch();
+    if (!$hasCerita) {
+        db()->exec('ALTER TABLE petani ADD COLUMN cerita_petani TEXT DEFAULT NULL AFTER alamat');
+    }
+
+    $hasProfil = db()->query("SHOW COLUMNS FROM petani LIKE 'profil_petani'")->fetch();
+    if (!$hasProfil) {
+        db()->exec('ALTER TABLE petani ADD COLUMN profil_petani TEXT DEFAULT NULL AFTER cerita_petani');
+    }
+}
+
+function getPetaniDetail(int $id): ?array
+{
+    ensurePetaniCeritaColumn();
+    $stmt = db()->prepare('
+        SELECT p.*, COUNT(pp.id) AS jumlah_produk
+        FROM petani p
+        LEFT JOIN produk_petani pp ON pp.petani_id = p.id AND pp.stok > 0
+        WHERE p.id = ?
+        GROUP BY p.id
+    ');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+function heroGradientOptions(): array
+{
+    return [
+        'from-primary/80' => 'Hijau gelap',
+        'from-primary/75' => 'Hijau medium',
+        'from-primary/70' => 'Hijau terang',
+        'from-secondary/80' => 'Orange gelap',
+        'from-secondary/75' => 'Orange medium',
+        'from-tertiary/80' => 'Kuning/emas',
+    ];
+}
+
+function ensureHeroSlidesTable(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    $exists = db()->query("SHOW TABLES LIKE 'hero_slides'")->fetch();
+    if (!$exists) {
+        db()->exec("
+            CREATE TABLE hero_slides (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                badge VARCHAR(100) NOT NULL,
+                judul VARCHAR(255) NOT NULL,
+                deskripsi TEXT NOT NULL,
+                gambar VARCHAR(500) NOT NULL,
+                gradient VARCHAR(80) NOT NULL DEFAULT 'from-primary/80',
+                btn_utama_label VARCHAR(100) NOT NULL DEFAULT 'Mulai Belanja',
+                btn_utama_url VARCHAR(255) NOT NULL DEFAULT 'home.php',
+                btn_sekunder_label VARCHAR(100) DEFAULT 'Daftar Gratis',
+                btn_sekunder_url VARCHAR(255) DEFAULT 'register.php',
+                urutan INT NOT NULL DEFAULT 0,
+                aktif TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        ");
+    }
+}
+
+function seedHeroSlidesIfEmpty(): void
+{
+    static $seeded = false;
+    if ($seeded) {
+        return;
+    }
+    $seeded = true;
+
+    ensureHeroSlidesTable();
+    $count = (int) db()->query('SELECT COUNT(*) FROM hero_slides')->fetchColumn();
+    if ($count > 0) {
+        return;
+    }
+
+    $defaults = [
+        ['Smart Distribution', 'Empowering Farmers Through Smart Distribution.', 'Memperpendek rantai distribusi yang panjang dan menciptakan peluang yang lebih adil melalui distribusi cerdas', 'assets/slide.png', 'from-primary/80', 1],
+        ['Community Empowerment', 'Lebih dari sekedar Marketplace', 'Menghubungkan petani lokal dengan konsumen sekaligus memberdayakan petani, masyarakat dan generasi muda', 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpNh1RVfev1fkjcwn1FSugvisPsudFtdeUoaPqY0bJTZBRz9_WXApOrLza1MECssg8hBImwzHtbrzz2p1v43SnCiVzoLIDv3mbXihRppNMl8K2L3HmZadG6Y8hwRoBWcx66WtYJl71oQk2cezjjLjIXclDyd4FR8GTlEY4IJb5_uWcfdyyfAo0-dWDi4Ih-TK66ABpFCsW-THx-E2VTeBvQOVA4Hn7IHFZ9sCB-LXmvRLRkL2E23qpfFC7bYjfHgCfp6BnyUtR1yPK', 'from-primary/75', 2],
+        ['Suistainable Future', 'Dari keranjang anda, untuk masa depan petani', 'Dengan membeli produk di tanixpress anda sedang membantu petani lokal untuk mendapatkan harga yang lebih layak atas kerja keras mereka', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCPTGFjQjiaPhoPYKiXH5crblDIQ0HNEHZ3yneW9DRyFT1KFM-FjEvs0XA7JQC-pjEnCU6JwOe3LFh1JjE6ceP71Rfd9Un4wz_wDbICTqc_v_A1nnwba2_2DRr2y_PSMvpLfj3hAfXQUR4rEPHKrBcLLRmp55d3dbLWYp8GIxlNqRWiw9BIFeI7kEWhIbReeB7XmO7FVopIjrAAGwKailfQIasWG4DOlpesNFHNZh_Ru4Q0785DUyJsMbIxOn_J8lFGZ5XLzdOBhWKX', 'from-primary/70', 3],
+        ['Youth-Led Innovation', 'Dari generasi muda, untuk masa depan pertanian', 'Dari kepedulian siswa SMA AL-KARIM terhadap tantangan yang di hadapi petani di sekitar', 'https://lh3.googleusercontent.com/aida-public/AB6AXuByrmnW0m3b70g_r3ihu4n2RejxRvjWqdBS4Dg27n2FYgqTjRIGXhV2d-8AW7CnviMU7KaK_xqRWYSCmXpsebyXTwJH3cspatmBqmXhoxjJZ6jRBOKI6jHQaXSnTQ4BTh3yVVE-Ux0J4qkEegw7Wb9LrZZyfOukfWD4o0nmRY0SNIayQJBaA4HFMFyVheCliiYt_331b4TD7Ij-qTnwUss_zqL9RmG1dUw5BZYuahH1pTpOTTNOPrTFRxcPrBGhpomC630pMqRLdkMy', 'from-secondary/75', 4],
+    ];
+
+    $stmt = db()->prepare('
+        INSERT INTO hero_slides (badge, judul, deskripsi, gambar, gradient, urutan)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ');
+    foreach ($defaults as $slide) {
+        $stmt->execute($slide);
+    }
+}
+
+function getHeroSlides(bool $activeOnly = true): array
+{
+    ensureHeroSlidesTable();
+    seedHeroSlidesIfEmpty();
+
+    $sql = 'SELECT * FROM hero_slides';
+    if ($activeOnly) {
+        $sql .= ' WHERE aktif = 1';
+    }
+    $sql .= ' ORDER BY urutan ASC, id ASC';
+
+    $rows = db()->query($sql)->fetchAll();
+    foreach ($rows as &$row) {
+        $row['img'] = mediaSrc($row['gambar']) ?? $row['gambar'];
+        $row['title'] = $row['judul'];
+        $row['desc'] = $row['deskripsi'];
+    }
+    unset($row);
+
+    return $rows;
+}
+
+function getHeroSlide(int $id): ?array
+{
+    ensureHeroSlidesTable();
+    $stmt = db()->prepare('SELECT * FROM hero_slides WHERE id = ?');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+function getNextHeroSlideOrder(): int
+{
+    ensureHeroSlidesTable();
+    return (int) db()->query('SELECT COALESCE(MAX(urutan), 0) + 1 FROM hero_slides')->fetchColumn();
+}
+
+function swapHeroSlideOrder(int $id, string $direction): void
+{
+    $slide = getHeroSlide($id);
+    if (!$slide) {
+        return;
+    }
+
+    $operator = $direction === 'up' ? '<' : '>';
+    $sort = $direction === 'up' ? 'DESC' : 'ASC';
+    $stmt = db()->prepare("SELECT id, urutan FROM hero_slides WHERE urutan $operator ? ORDER BY urutan $sort LIMIT 1");
+    $stmt->execute([(int) $slide['urutan']]);
+    $neighbor = $stmt->fetch();
+    if (!$neighbor) {
+        return;
+    }
+
+    $pdo = db();
+    $pdo->prepare('UPDATE hero_slides SET urutan = ? WHERE id = ?')->execute([(int) $neighbor['urutan'], $id]);
+    $pdo->prepare('UPDATE hero_slides SET urutan = ? WHERE id = ?')->execute([(int) $slide['urutan'], (int) $neighbor['id']]);
 }

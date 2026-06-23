@@ -7,6 +7,7 @@ $user = currentUser();
 
 $menus = [
     'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard', 'url' => 'index.php'],
+    'hero' => ['icon' => 'view_carousel', 'label' => 'Hero Beranda', 'url' => 'hero.php'],
     'products' => ['icon' => 'inventory_2', 'label' => 'Produk', 'url' => 'products.php'],
     'farmers' => ['icon' => 'agriculture', 'label' => 'Petani', 'url' => 'farmers.php'],
     'produk-petani' => ['icon' => 'link', 'label' => 'Produk-Petani', 'url' => 'produk-petani.php'],

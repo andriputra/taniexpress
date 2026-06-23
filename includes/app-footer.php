@@ -24,7 +24,7 @@ $bottomNav = [
             <div class="flex items-center gap-2 mb-4">
                 <?php renderBrandLogo('md'); ?>
             </div>
-            <p class="text-sm text-on-surface-variant leading-relaxed">Menghubungkan dapur Anda dengan ladang petani lokal terbaik di Indonesia.</p>
+            <p class="text-sm text-on-surface-variant leading-relaxed">Empowering Farmers Through Smart Distribution.</p>
         </div>
         <div>
             <h4 class="text-label-md font-bold uppercase tracking-wider mb-4">Belanja</h4>
@@ -45,7 +45,7 @@ $bottomNav = [
         <div>
             <h4 class="text-label-md font-bold uppercase tracking-wider mb-4">Kontak</h4>
             <ul class="space-y-3 text-sm text-on-surface-variant">
-                <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary text-[18px]">location_on</span> Jl. Pertanian No. 88, Lembang</li>
+                <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary text-[18px]">location_on</span> Pinang Jaya, Kemiling, Kota Bandar Lampung, Lampung 35119</li>
                 <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">call</span> +62 812-3456-7890</li>
             </ul>
         </div>

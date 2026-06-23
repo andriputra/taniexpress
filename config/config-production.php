@@ -1,0 +1,19 @@
+<?php
+
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'icer2762_taniexpress');
+define('DB_USER', 'icer2762_taniexpress_user');
+define('DB_PASS', 'TaniUser1q2w3e4r');
+define('DB_CHARSET', 'utf8mb4');
+
+define('APP_NAME', 'TaniXpress');
+define('BASE_URL', '/'); // sesuaikan jika di subfolder, misal: '/taniexpress/'
+
+define('ONGKIR_DEFAULT', 15000);
+define('BIAYA_PLATFORM', 5000);
+define('UPLOAD_DIR', __DIR__ . '/../uploads/');
+define('UPLOAD_URL', 'uploads/');
+define('APP_LOGO', 'assets/logo.png');
+define('APP_FAVICON', 'assets/favicon.png');
+
+date_default_timezone_set('Asia/Jakarta');
