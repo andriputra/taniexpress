@@ -37,7 +37,8 @@ $chatApiUrl = 'api/chat.php';
         bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
         z-index: 56;
         width: min(100vw - 2rem, 380px);
-        height: min(70dvh, 520px);
+        height: auto;
+        max-height: min(70dvh, 520px);
         border-radius: 1.25rem;
         overflow: hidden;
         box-shadow: 0 20px 50px rgba(15, 82, 56, 0.2);
@@ -49,6 +50,9 @@ $chatApiUrl = 'api/chat.php';
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.25s, transform 0.25s;
+    }
+    #chat-panel.is-chatting {
+        height: min(70dvh, 520px);
     }
     #chat-panel.is-open {
         opacity: 1;
@@ -102,7 +106,7 @@ $chatApiUrl = 'api/chat.php';
     <span id="chat-fab-badge">0</span>
 </button>
 
-<div id="chat-panel" role="dialog" aria-label="Live chat TaniExpress">
+<div id="chat-panel" role="dialog" aria-label="Live chat TaniExpress"<?= $chatLoggedIn ? ' class="is-chatting"' : '' ?>>
     <div class="bg-primary text-white px-4 py-3 flex items-center gap-3 shrink-0">
         <span class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
             <span class="material-symbols-outlined text-[20px]">support_agent</span>
@@ -117,7 +121,7 @@ $chatApiUrl = 'api/chat.php';
     </div>
 
     <!-- Init form -->
-    <div id="chat-init" class="flex-1 overflow-y-auto p-4 <?= $chatLoggedIn ? 'hidden' : '' ?>">
+    <div id="chat-init" class="p-4 <?= $chatLoggedIn ? 'hidden' : '' ?>">
         <p class="text-sm text-text-muted mb-4">Hubungi admin untuk bantuan belanja atau pertanyaan pesanan.</p>
         <form id="chat-init-form" class="space-y-3">
             <div>
@@ -200,6 +204,7 @@ $chatApiUrl = 'api/chat.php';
     function showChat() {
         initEl.classList.add('hidden');
         messagesWrap.classList.remove('hidden');
+        panel.classList.add('is-chatting');
     }
 
     function setThreadClosed(closed) {
