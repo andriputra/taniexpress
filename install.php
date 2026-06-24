@@ -85,6 +85,40 @@ try {
         echo "Migrasi: tabel hero_slides ditambahkan.\n";
     }
 
+    if (!(bool) $pdo->query("SHOW TABLES LIKE 'chat_threads'")->fetch()) {
+        $pdo->exec("
+            CREATE TABLE chat_threads (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT DEFAULT NULL,
+                guest_token VARCHAR(64) DEFAULT NULL,
+                visitor_name VARCHAR(100) NOT NULL,
+                visitor_type ENUM('customer', 'petani') NOT NULL DEFAULT 'customer',
+                visitor_telepon VARCHAR(20) DEFAULT NULL,
+                status ENUM('open', 'closed') NOT NULL DEFAULT 'open',
+                last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                unread_admin INT NOT NULL DEFAULT 0,
+                unread_user INT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_thread (user_id),
+                UNIQUE KEY unique_guest_token (guest_token),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ");
+        $pdo->exec("
+            CREATE TABLE chat_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                thread_id INT NOT NULL,
+                sender_role ENUM('user', 'admin') NOT NULL,
+                sender_user_id INT DEFAULT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (thread_id) REFERENCES chat_threads(id) ON DELETE CASCADE,
+                FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE SET NULL
+            )
+        ");
+        echo "Migrasi: tabel chat ditambahkan.\n";
+    }
+
     $sql = file_get_contents(__DIR__ . '/database/schema.sql');
     $statements = array_filter(array_map('trim', explode(';', $sql)));
 

@@ -77,6 +77,13 @@ $bottomNav = [
 
 <?php renderUiShell(); ?>
 
+<?php
+$chatWidgetUser = currentUser();
+if (!$chatWidgetUser || $chatWidgetUser['role'] !== 'admin') {
+    include __DIR__ . '/chat-widget.php';
+}
+?>
+
 <script>
 (function () {
     const header = document.getElementById('app-header');

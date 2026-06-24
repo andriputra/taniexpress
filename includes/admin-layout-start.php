@@ -4,9 +4,16 @@
 $pageTitle = $pageTitle ?? 'Dashboard';
 $activeMenu = $activeMenu ?? 'dashboard';
 $user = currentUser();
+$chatUnreadAdmin = 0;
+try {
+    $chatUnreadAdmin = getChatUnreadAdminCount();
+} catch (Throwable $e) {
+    $chatUnreadAdmin = 0;
+}
 
 $menus = [
     'dashboard' => ['icon' => 'dashboard', 'label' => 'Dashboard', 'url' => 'index.php'],
+    'chat' => ['icon' => 'chat', 'label' => 'Live Chat', 'url' => 'chat.php'],
     'hero' => ['icon' => 'view_carousel', 'label' => 'Hero Beranda', 'url' => 'hero.php'],
     'products' => ['icon' => 'inventory_2', 'label' => 'Produk', 'url' => 'products.php'],
     'farmers' => ['icon' => 'agriculture', 'label' => 'Petani', 'url' => 'farmers.php'],
@@ -116,7 +123,10 @@ $menus = [
                class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
                       <?= $activeMenu === $key ? 'bg-primary text-white' : 'text-on-surface hover:bg-leaf-green-light hover:text-primary' ?>">
                 <span class="material-symbols-outlined text-[20px]"><?= $menu['icon'] ?></span>
-                <?= $menu['label'] ?>
+                <span class="flex-1"><?= $menu['label'] ?></span>
+                <?php if ($key === 'chat' && $chatUnreadAdmin > 0): ?>
+                    <span class="min-w-[20px] h-5 px-1.5 rounded-full bg-error-red text-white text-[10px] font-bold flex items-center justify-center"><?= $chatUnreadAdmin > 9 ? '9+' : $chatUnreadAdmin ?></span>
+                <?php endif; ?>
             </a>
         <?php endforeach; ?>
     </nav>
